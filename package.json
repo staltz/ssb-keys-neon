@@ -1,0 +1,19 @@
+{
+  "name": "ssb-neon-keys",
+  "version": "7.2.0",
+  "description": "Rust-in-Node.js variant of ssb-keys",
+  "main": "lib/index.js",
+  "author": "Andre Staltz <andre@staltz.com>",
+  "license": "AGPL-3.0",
+  "dependencies": {
+    "neon-cli": "^0.3.3"
+  },
+  "devDependencies": {
+    "tape": "^3.0.3"
+  },
+  "scripts": {
+    "install": "neon build",
+    "build": "neon build",
+    "test": "tape test/*"
+  }
+}

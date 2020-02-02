@@ -1,0 +1,21 @@
+[package]
+name = "ssb-keys-rs"
+version = "7.2.0"
+authors = ["Andre Staltz <andre@staltz.com>"]
+license = "MIT"
+build = "build.rs"
+exclude = ["artifacts.json", "index.node"]
+
+[lib]
+name = "ssb_keys_rs"
+crate-type = ["cdylib"]
+
+[build-dependencies]
+neon-build = "0.3.3"
+
+[dependencies]
+neon = "0.3.3"
+ssb-keyfile = "0.2.0"
+ssb-crypto = "~0.1.4"
+base64 = "0.11.0"
+sodiumoxide = "~0.2.5"
