@@ -47,6 +47,12 @@ fn make_keys_obj<'a, 'b, 'c>(
 }
 
 fn generate(mut cx: FunctionContext) -> JsResult<JsObject> {
+    let args_length = cx.len();
+    if args_length == 0 {
+        let (pk, sk) = ed25519::gen_keypair();
+        return cx.compute_scoped(|mut cx2| make_keys_obj(&mut cx2, &pk, &sk));
+    }
+
     // First argument: curve (default = "ed25519")
     cx.argument::<JsValue>(0)
         .and_then(|v| {
