@@ -11,43 +11,43 @@ pub fn neon_generate(mut cx: FunctionContext) -> JsResult<JsObject> {
   }
 
   // First argument: curve (default = "ed25519")
-  cx.argument::<JsValue>(0)
+  let curve = cx
+    .argument::<JsValue>(0)
     .and_then(|v| {
       if v.is_a::<JsString>() {
         v.downcast::<JsString>().or_throw(&mut cx)
       } else {
         Ok(cx.string("ed25519"))
       }
-    })
-    .map(|v| v.value())
-    // Assert that curve is one of the valid types: ['ed25519']
-    .and_then(|curve| {
-      if curve == "ed25519" {
-        Ok(())
+    })?
+    .value();
+
+  // The only valid curve types: ['ed25519']
+  if curve != "ed25519" {
+    return cx.throw_error("curve argument only supports: ed25519");
+  }
+
+  // Second argument: seed
+  let maybe_seed = cx
+    .argument_opt(1)
+    .map(|v| {
+      if v.is_a::<JsBuffer>() {
+        v.downcast::<JsBuffer>().or_throw(&mut cx)
       } else {
-        cx.throw_error("curve argument only supports: ed25519")
+        cx.throw_error("seed argument must be a buffer")
       }
     })
-    // Second argument: seed
-    .and_then(|_| {
-      cx.argument_opt(1)
-        .map(|v| {
-          if v.is_a::<JsBuffer>() {
-            v.downcast::<JsBuffer>().or_throw(&mut cx)
-          } else {
-            cx.throw_error("seed argument must be a buffer")
-          }
-        })
-        .transpose()
-    })
-    // Use seed if given, else, generate from random
-    .map(|maybe_seed| match maybe_seed {
-      Some(seed_buffer) => cx.borrow(&seed_buffer, |data| {
-        let seed_bytes = data.as_slice::<u8>();
-        let seed = Seed::from_slice(seed_bytes).unwrap();
-        ed25519::keypair_from_seed(&seed)
-      }),
-      None => ed25519::gen_keypair(),
-    })
-    .and_then(|(pk, sk)| cx.compute_scoped(|mut cx2| make_keys_obj(&mut cx2, &pk, &sk)))
+    .transpose()?;
+
+  // Use seed if given, else, generate from random
+  let (pk, sk) = match maybe_seed {
+    Some(seed_buffer) => cx.borrow(&seed_buffer, |data| {
+      let seed_bytes = data.as_slice::<u8>();
+      let seed = Seed::from_slice(seed_bytes).unwrap();
+      ed25519::keypair_from_seed(&seed)
+    }),
+    None => ed25519::gen_keypair(),
+  };
+
+  cx.compute_scoped(|mut cx2| make_keys_obj(&mut cx2, &pk, &sk))
 }
