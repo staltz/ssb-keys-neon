@@ -28,8 +28,7 @@ tape('create and load sync', function(t) {
   t.end();
 });
 
-// TODO
-tape.skip('sign and verify a javascript object', function(t) {
+tape('sign and verify a javascript object', function(t) {
   var obj = require('../package.json');
 
   // console.log(obj);

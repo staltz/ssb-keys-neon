@@ -6,14 +6,16 @@ extern crate ssb_keyfile;
 mod create;
 mod generate;
 mod load;
+mod sig;
 mod utils;
 
 use self::create::{neon_create, neon_create_sync};
 use self::generate::neon_generate;
 use self::load::{neon_load, neon_load_sync};
+use self::sig::{neon_sign_obj, neon_verify_obj};
 use neon::prelude::*;
 
-// pub fn keypair_from_seed(seed: &Seed) -> (PublicKey, SecretKey) {
+// FIXME: release new ssb-keyfile-rs with my PR
 
 register_module!(mut cx, {
     cx.export_function("generate", neon_generate)?;
@@ -21,5 +23,7 @@ register_module!(mut cx, {
     cx.export_function("loadSync", neon_load_sync)?;
     cx.export_function("create", neon_create)?;
     cx.export_function("createSync", neon_create_sync)?;
+    cx.export_function("signObj", neon_sign_obj)?;
+    cx.export_function("verifyObj", neon_verify_obj)?;
     Ok(())
 });
