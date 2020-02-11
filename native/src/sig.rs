@@ -46,7 +46,9 @@ pub fn neon_sign_obj(mut cx: FunctionContext) -> JsResult<JsObject> {
 
   let null = cx.null();
   let args: Vec<Handle<JsValue>> = vec![obj.upcast(), null.upcast(), cx.number(2).upcast()];
-  let msg = cx.compute_scoped(|cx2| utils::json_stringify(cx2, args))?.value();
+  let msg = cx
+    .compute_scoped(|cx2| utils::json_stringify(cx2, args))?
+    .value();
   let msg = msg.into_bytes();
   let msg = msg.as_slice();
 
@@ -103,13 +105,15 @@ pub fn neon_verify_obj(mut cx: FunctionContext) -> JsResult<JsBoolean> {
     .or_else(|_| cx.throw_error("cannot decode public key bytes"))?;
 
   let obj = cx.argument::<JsObject>(1)?; // TODO this should check the types
-  let sig = obj.get(&mut cx, "signature")
+  let sig = obj
+    .get(&mut cx, "signature")
     .or_else(|_| cx.throw_error("obj.signature field is missing from obj"))?
-    .downcast::<JsString>().or_throw(&mut cx)
+    .downcast::<JsString>()
+    .or_throw(&mut cx)
     .or_else(|_| cx.throw_error("obj.signature field is corrupted or not a string"))?
     .value();
   let sig = utils::sig_decode_key(sig)
-      .or_else(|_| cx.throw_error("unable to decode signature base64 string"))?;
+    .or_else(|_| cx.throw_error("unable to decode signature base64 string"))?;
   let sig = ed25519::Signature::from_slice(&sig)
     .ok_or(0)
     .or_else(|_| cx.throw_error("cannot decode signature bytes"))?;
@@ -119,7 +123,9 @@ pub fn neon_verify_obj(mut cx: FunctionContext) -> JsResult<JsBoolean> {
   verify_obj.set(&mut cx, "signature", undef)?; // `delete` keyword in JS would be better
   let null = cx.null();
   let args: Vec<Handle<JsValue>> = vec![verify_obj.upcast(), null.upcast(), cx.number(2).upcast()];
-  let msg = cx.compute_scoped(|cx2| utils::json_stringify(cx2, args))?.value();
+  let msg = cx
+    .compute_scoped(|cx2| utils::json_stringify(cx2, args))?
+    .value();
   let msg = msg.into_bytes();
   let msg = msg.as_slice();
 
