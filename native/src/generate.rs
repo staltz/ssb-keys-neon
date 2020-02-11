@@ -19,7 +19,8 @@ pub fn neon_generate(mut cx: FunctionContext) -> JsResult<JsObject> {
       } else {
         Ok(cx.string("ed25519"))
       }
-    })?
+    })
+    .or_else(|_| cx.throw_error("failed to understand `curve` argument"))?
     .value();
 
   // The only valid curve types: ['ed25519']
@@ -37,7 +38,8 @@ pub fn neon_generate(mut cx: FunctionContext) -> JsResult<JsObject> {
         cx.throw_error("seed argument must be a buffer")
       }
     })
-    .transpose()?;
+    .transpose()
+    .or_else(|_| cx.throw_error("failed to understand `seed` argument"))?;
 
   // Use seed if given, else, generate from random
   let (pk, sk) = match maybe_seed {

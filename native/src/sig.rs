@@ -23,15 +23,11 @@ pub fn neon_sign_obj(mut cx: FunctionContext) -> JsResult<JsObject> {
           .or_throw(&mut cx)
       } else {
         cx.throw_error(
-          "expected first argument of `signObj` to be the keys object or the private key string",
+          "expected `private` argument to be the keys object or the private key string",
         )
       }
     })
-    .or_else(|_| {
-      cx.throw_error(
-        "expected first argument of `signObj` to be the keys object or the private key string",
-      )
-    })?
+    .or_else(|_| cx.throw_error("failed to understand `private` argument"))?
     .value();
   // println!("private_str {}", private_str);
   let private_key = utils::decode_key(private_key)
@@ -41,13 +37,18 @@ pub fn neon_sign_obj(mut cx: FunctionContext) -> JsResult<JsObject> {
     .ok_or(0)
     .or_else(|_| cx.throw_error("cannot decode private key bytes"))?;
 
-  let obj = cx.argument::<JsObject>(1)?; // TODO this should check the types
-  let out_obj = cx.compute_scoped(|cx2| utils::clone_js_obj(cx2, obj))?;
+  let obj = cx
+    .argument::<JsObject>(1)
+    .or_else(|_| cx.throw_error("expected `object` argument to be a valid JS object"))?;
+  let out_obj = cx
+    .compute_scoped(|cx2| utils::clone_js_obj(cx2, obj))
+    .or_else(|_| cx.throw_error("failed to create a clone of a javascript object"))?;
 
   let null = cx.null();
   let args: Vec<Handle<JsValue>> = vec![obj.upcast(), null.upcast(), cx.number(2).upcast()];
   let msg = cx
-    .compute_scoped(|cx2| utils::json_stringify(cx2, args))?
+    .compute_scoped(|cx2| utils::json_stringify(cx2, args))
+    .or_else(|_| cx.throw_error("failed to JSON.stringify the given `object` argument"))?
     .value();
   let msg = msg.into_bytes();
   let msg = msg.as_slice();
@@ -59,12 +60,13 @@ pub fn neon_sign_obj(mut cx: FunctionContext) -> JsResult<JsObject> {
 
   // println!("sig: {}", signature_string);
   let signature = cx.string(signature);
-  out_obj.set(&mut cx, "signature", signature)?;
+  out_obj
+    .set(&mut cx, "signature", signature)
+    .or_else(|_| cx.throw_error("failed to set the `signature` field in the object"))?;
 
   Ok(out_obj)
 }
 
-// TODO confirm that it actually returns booleans
 // verify: (keys: obj | string, hmac_key?: string, o: obj) => boolean
 pub fn neon_verify_obj(mut cx: FunctionContext) -> JsResult<JsBoolean> {
   // FIXME: support hmac_keys
@@ -85,16 +87,10 @@ pub fn neon_verify_obj(mut cx: FunctionContext) -> JsResult<JsBoolean> {
           .downcast::<JsString>()
           .or_throw(&mut cx)
       } else {
-        cx.throw_error(
-          "expected first argument of `verifyObj` to be the keys object or the public key string",
-        )
+        cx.throw_error("expected `public` argument to be the keys object or the public key string")
       }
     })
-    .or_else(|_| {
-      cx.throw_error(
-        "expected first argument of `verifyObj` to be the keys object or the public key string",
-      )
-    })?
+    .or_else(|_| cx.throw_error("failed to understand `private` argument"))?
     .value();
   // println!("public_str {}", public_str);
   let public_key = utils::decode_key(public_str)
@@ -104,7 +100,9 @@ pub fn neon_verify_obj(mut cx: FunctionContext) -> JsResult<JsBoolean> {
     .ok_or(0)
     .or_else(|_| cx.throw_error("cannot decode public key bytes"))?;
 
-  let obj = cx.argument::<JsObject>(1)?; // TODO this should check the types
+  let obj = cx
+    .argument::<JsObject>(1)
+    .or_else(|_| cx.throw_error("expected `object` argument to be a valid JS object"))?;
   let sig = obj
     .get(&mut cx, "signature")
     .or_else(|_| cx.throw_error("obj.signature field is missing from obj"))?
@@ -118,13 +116,18 @@ pub fn neon_verify_obj(mut cx: FunctionContext) -> JsResult<JsBoolean> {
     .ok_or(0)
     .or_else(|_| cx.throw_error("cannot decode signature bytes"))?;
 
-  let verify_obj = cx.compute_scoped(|cx2| utils::clone_js_obj(cx2, obj))?;
+  let verify_obj = cx
+    .compute_scoped(|cx2| utils::clone_js_obj(cx2, obj))
+    .or_else(|_| cx.throw_error("failed to create a clone of a javascript object"))?;
   let undef = cx.undefined();
-  verify_obj.set(&mut cx, "signature", undef)?; // `delete` keyword in JS would be better
+  verify_obj
+    .set(&mut cx, "signature", undef) // `delete` keyword in JS would be better
+    .or_else(|_| cx.throw_error("failed to remove the `signature` field from the object"))?;
   let null = cx.null();
   let args: Vec<Handle<JsValue>> = vec![verify_obj.upcast(), null.upcast(), cx.number(2).upcast()];
   let msg = cx
-    .compute_scoped(|cx2| utils::json_stringify(cx2, args))?
+    .compute_scoped(|cx2| utils::json_stringify(cx2, args))
+    .or_else(|_| cx.throw_error("failed to JSON.stringify the given verifying object"))?
     .value();
   let msg = msg.into_bytes();
   let msg = msg.as_slice();

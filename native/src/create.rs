@@ -55,16 +55,18 @@ impl Task for CreateTask {
     mut cx: TaskContext,
     result: Result<(PublicKey, SecretKey), Error>,
   ) -> JsResult<JsObject> {
-    result
+    let (pk, sk) = result
       // TODO convert Error to Neon "Throw" with proper error info
-      .or_else(|_| cx.throw_error("unable to create secret file"))
-      .and_then(|(pk, sk)| cx.compute_scoped(|mut cx2| make_keys_obj(&mut cx2, &pk, &sk)))
+      .or_else(|_| cx.throw_error("unable to create secret file"))?;
+
+    cx.compute_scoped(|mut cx2| make_keys_obj(&mut cx2, &pk, &sk))
   }
 }
 
 pub fn neon_create(mut cx: FunctionContext) -> JsResult<JsUndefined> {
   // TODO support all arguments (path, curve, isLegacy, cb)
-  cx.argument::<JsValue>(0)
+  let path = cx
+    .argument::<JsValue>(0)
     .and_then(|v| {
       if v.is_a::<JsString>() {
         v.downcast::<JsString>().or_throw(&mut cx)
@@ -72,28 +74,29 @@ pub fn neon_create(mut cx: FunctionContext) -> JsResult<JsUndefined> {
         cx.throw_error("expected string as the first argument to `create`")
       }
     })
-    .map(|v| v.value())
-    .and_then(|path| {
-      cx.argument::<JsValue>(1)
-        .and_then(|f| {
-          if f.is_a::<JsFunction>() {
-            f.downcast::<JsFunction>().or_throw(&mut cx)
-          } else {
-            cx.throw_error("expected a callback function given to `create`")
-          }
-        })
-        .map(|cb| (path, cb))
+    .or_else(|_| cx.throw_error("failed to understand the `path` argument"))?
+    .value();
+
+  let cb = cx
+    .argument::<JsValue>(1)
+    .and_then(|f| {
+      if f.is_a::<JsFunction>() {
+        f.downcast::<JsFunction>().or_throw(&mut cx)
+      } else {
+        cx.throw_error("expected a callback function given to `create`")
+      }
     })
-    .map(|(path, cb)| {
-      let task = CreateTask { argument: path };
-      task.schedule(cb);
-      cx.undefined()
-    })
+    .or_else(|_| cx.throw_error("failed to understand the `cb` argument"))?;
+
+  let task = CreateTask { argument: path };
+  task.schedule(cb);
+  Ok(cx.undefined())
 }
 
 pub fn neon_create_sync(mut cx: FunctionContext) -> JsResult<JsObject> {
   // TODO support all arguments (path, curve, isLegacy)
-  cx.argument::<JsValue>(0)
+  let path = cx
+    .argument::<JsValue>(0)
     .and_then(|v| {
       if v.is_a::<JsString>() {
         v.downcast::<JsString>().or_throw(&mut cx)
@@ -101,9 +104,11 @@ pub fn neon_create_sync(mut cx: FunctionContext) -> JsResult<JsObject> {
         cx.throw_error("expected string as only argument to `loadSync`")
       }
     })
-    .map(|v| v.value())
-    .and_then(|path| {
-      internal_create(&path).or_else(|_| cx.throw_error("unable to create secret file"))
-    })
-    .and_then(|(pk, sk)| cx.compute_scoped(|mut cx2| make_keys_obj(&mut cx2, &pk, &sk)))
+    .or_else(|_| cx.throw_error("failed to understand the `path` argument"))?
+    .value();
+
+  let (pk, sk) =
+    internal_create(&path).or_else(|_| cx.throw_error("unable to create secret file"))?;
+
+  cx.compute_scoped(|mut cx2| make_keys_obj(&mut cx2, &pk, &sk))
 }

@@ -36,15 +36,17 @@ impl Task for LoadTask {
     mut cx: TaskContext,
     result: Result<(PublicKey, SecretKey), SSBError>,
   ) -> JsResult<JsObject> {
-    result
+    let (pk, sk) = result
       // TODO convert SSBError to Neon "Throw" with proper error info
-      .or_else(|_| cx.throw_error("unable to create secret file"))
-      .and_then(|(pk, sk)| cx.compute_scoped(|mut cx2| make_keys_obj(&mut cx2, &pk, &sk)))
+      .or_else(|_| cx.throw_error("unable to create secret file"))?;
+
+    cx.compute_scoped(|mut cx2| make_keys_obj(&mut cx2, &pk, &sk))
   }
 }
 
 pub fn neon_load(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-  cx.argument::<JsValue>(0)
+  let path = cx
+    .argument::<JsValue>(0)
     .and_then(|v| {
       if v.is_a::<JsString>() {
         v.downcast::<JsString>().or_throw(&mut cx)
@@ -52,27 +54,28 @@ pub fn neon_load(mut cx: FunctionContext) -> JsResult<JsUndefined> {
         cx.throw_error("expected string as the first argument to `load`")
       }
     })
-    .map(|v| v.value())
-    .and_then(|path| {
-      cx.argument::<JsValue>(1)
-        .and_then(|f| {
-          if f.is_a::<JsFunction>() {
-            f.downcast::<JsFunction>().or_throw(&mut cx)
-          } else {
-            cx.throw_error("expected a callback function given to `load`")
-          }
-        })
-        .map(|cb| (path, cb))
+    .or_else(|_| cx.throw_error("failed to understand the `path` argument"))?
+    .value();
+
+  let cb = cx
+    .argument::<JsValue>(1)
+    .and_then(|f| {
+      if f.is_a::<JsFunction>() {
+        f.downcast::<JsFunction>().or_throw(&mut cx)
+      } else {
+        cx.throw_error("expected a callback function given to `load`")
+      }
     })
-    .map(|(path, cb)| {
-      let task = LoadTask { argument: path };
-      task.schedule(cb);
-      cx.undefined()
-    })
+    .or_else(|_| cx.throw_error("failed to understand the `cb` argument"))?;
+
+  let task = LoadTask { argument: path };
+  task.schedule(cb);
+  Ok(cx.undefined())
 }
 
 pub fn neon_load_sync(mut cx: FunctionContext) -> JsResult<JsObject> {
-  cx.argument::<JsValue>(0)
+  let path = cx
+    .argument::<JsValue>(0)
     .and_then(|v| {
       if v.is_a::<JsString>() {
         v.downcast::<JsString>().or_throw(&mut cx)
@@ -80,7 +83,10 @@ pub fn neon_load_sync(mut cx: FunctionContext) -> JsResult<JsObject> {
         cx.throw_error("expected string as only argument to `loadSync`")
       }
     })
-    .map(|v| v.value())
-    .and_then(|path| internal_load(&path).or_else(|_| cx.throw_error("unable to load secret file")))
-    .and_then(|(pk, sk)| cx.compute_scoped(|mut cx2| make_keys_obj(&mut cx2, &pk, &sk)))
+    .or_else(|_| cx.throw_error("failed to understand the `path` argument"))?
+    .value();
+
+  let (pk, sk) = internal_load(&path).or_else(|_| cx.throw_error("unable to load secret file"))?;
+
+  cx.compute_scoped(|mut cx2| make_keys_obj(&mut cx2, &pk, &sk))
 }
