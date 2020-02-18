@@ -45,8 +45,7 @@ tape('sign and verify a javascript object', function(t) {
 //allow sign and verify to also take a separate key
 //so that we can create signatures that cannot be used in other places.
 //(i.e. testnet) avoiding chosen protocol attacks.
-// TODO
-tape.skip('sign and verify a hmaced object javascript object', function(t) {
+tape('sign and verify a hmaced object javascript object', function(t) {
   var obj = require('../package.json');
   var hmac_key = crypto.randomBytes(32);
   var hmac_key2 = crypto.randomBytes(32);
