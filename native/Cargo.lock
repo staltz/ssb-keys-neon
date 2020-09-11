@@ -285,6 +285,7 @@ name = "ssb-keys-rs"
 version = "7.2.0"
 dependencies = [
  "base64 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libsodium-sys 0.2.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "neon 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "neon-build 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "sodiumoxide 0.2.5 (registry+https://github.com/rust-lang/crates.io-index)",

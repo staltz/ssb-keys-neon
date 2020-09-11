@@ -1,5 +1,6 @@
 // #[macro_use]
 extern crate base64;
+extern crate libsodium_sys;
 extern crate neon;
 extern crate sodiumoxide;
 extern crate ssb_keyfile;
@@ -7,12 +8,14 @@ mod create;
 mod generate;
 mod load;
 mod sig;
+mod unbox;
 mod utils;
 
 use self::create::{neon_create, neon_create_sync};
 use self::generate::neon_generate;
 use self::load::{neon_load, neon_load_sync};
 use self::sig::{neon_sign_obj, neon_verify_obj};
+use self::unbox::neon_box;
 use neon::prelude::*;
 
 // FIXME: release new ssb-keyfile-rs with my PR
@@ -25,5 +28,6 @@ register_module!(mut cx, {
     cx.export_function("createSync", neon_create_sync)?;
     cx.export_function("signObj", neon_sign_obj)?;
     cx.export_function("verifyObj", neon_verify_obj)?;
+    cx.export_function("box", neon_box)?;
     Ok(())
 });

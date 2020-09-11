@@ -9,11 +9,12 @@
     "neon-cli": "^0.3.3"
   },
   "devDependencies": {
-    "tape": "^3.0.3"
+    "tape": "^3.0.3",
+    "ssb-keys": "7.2.0"
   },
   "scripts": {
     "install": "neon build",
     "build": "neon build",
-    "test": "tape test/*"
+    "test": "tape test/*.js"
   }
 }
