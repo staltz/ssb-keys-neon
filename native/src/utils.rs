@@ -69,7 +69,10 @@ pub fn make_keys_obj<'a, 'b, 'c>(
 }
 
 // TODO publish to some neon-helpers library?
-pub fn json_stringify<'a, 'b>(mut cx: ComputeContext<'a, 'b>, args: Vec<Handle<JsValue>>) -> JsResult<'a, JsString> {
+pub fn json_stringify<'a, 'b>(
+  mut cx: ComputeContext<'a, 'b>,
+  args: Vec<Handle<JsValue>>,
+) -> JsResult<'a, JsString> {
   let stringify = cx
     .global()
     .get(&mut cx, "JSON")?
@@ -79,18 +82,28 @@ pub fn json_stringify<'a, 'b>(mut cx: ComputeContext<'a, 'b>, args: Vec<Handle<J
     .downcast::<JsFunction>()
     .or_throw(&mut cx)?;
   let null = cx.null();
-  stringify.call(&mut cx, null, args)?.downcast::<JsString>().or_throw(&mut cx)
+  stringify
+    .call(&mut cx, null, args)?
+    .downcast::<JsString>()
+    .or_throw(&mut cx)
 }
 
 // TODO publish to some neon-helpers library?
-pub fn clone_js_obj<'a, 'b>(mut cx: ComputeContext<'a, 'b>, obj: Handle<JsObject>) -> JsResult<'a, JsObject> {
+pub fn clone_js_obj<'a, 'b>(
+  mut cx: ComputeContext<'a, 'b>,
+  obj: Handle<JsObject>,
+) -> JsResult<'a, JsObject> {
   let new_obj = cx.empty_object();
   let keys = obj.get_own_property_names(&mut cx)?;
   for i in 0..keys.len() {
-    let key = keys.get(&mut cx, i)?.downcast::<JsString>().or_throw(&mut cx)?.value();
+    let key = keys
+      .get(&mut cx, i)?
+      .downcast::<JsString>()
+      .or_throw(&mut cx)?
+      .value();
     let val = obj.get(&mut cx, key.as_str())?;
     new_obj.set(&mut cx, key.as_str(), val)?;
-  };
+  }
   Ok(new_obj)
 }
 
