@@ -88,6 +88,25 @@ pub fn json_stringify<'a, 'b>(
     .or_throw(&mut cx)
 }
 
+pub fn json_parse<'a, 'b>(
+  mut cx: ComputeContext<'a, 'b>,
+  args: Vec<Handle<JsString>>,
+) -> JsResult<'a, JsObject> {
+  let parse = cx
+    .global()
+    .get(&mut cx, "JSON")?
+    .downcast::<JsObject>()
+    .or_throw(&mut cx)?
+    .get(&mut cx, "parse")?
+    .downcast::<JsFunction>()
+    .or_throw(&mut cx)?;
+  let null = cx.null();
+  parse
+    .call(&mut cx, null, args)?
+    .downcast::<JsObject>()
+    .or_throw(&mut cx)
+}
+
 // TODO publish to some neon-helpers library?
 pub fn clone_js_obj<'a, 'b>(
   mut cx: ComputeContext<'a, 'b>,
