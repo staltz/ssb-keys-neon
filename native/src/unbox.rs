@@ -5,17 +5,14 @@ use sodiumoxide::crypto::sign::ed25519;
 use sodiumoxide::crypto::sign::PublicKey;
 
 pub fn neon_box(mut cx: FunctionContext) -> JsResult<JsString> {
-  let msg_buf = {
+  let msg = {
     let arg1 = cx.argument::<JsValue>(0)?;
     let stringified = cx
       .compute_scoped(|cx2| utils::json_stringify(cx2, vec![arg1]))
       .or_else(|_| cx.throw_error("failed to JSON.stringify the given `msg` argument"))?
       .value();
-    let buf = cx.compute_scoped(|mut cx2| utils::string_to_buffer(&mut cx2, stringified))?;
-    buf
+    stringified.into_bytes()
   };
-
-  let msg = cx.borrow(&msg_buf, |data| data.as_slice::<u8>());
 
   let recps: Vec<PublicKey> = cx
     .argument::<JsValue>(1)
@@ -51,7 +48,7 @@ pub fn neon_box(mut cx: FunctionContext) -> JsResult<JsString> {
     })
     .collect();
 
-  let multiboxed = private_box::encrypt(msg, recps.as_slice());
+  let multiboxed = private_box::encrypt(msg.as_slice(), recps.as_slice());
   let mut out = base64::encode_config(multiboxed.as_slice(), base64::STANDARD);
   out.push_str(".box");
 
