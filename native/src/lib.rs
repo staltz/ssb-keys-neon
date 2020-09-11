@@ -27,9 +27,17 @@ register_module!(mut cx, {
     cx.export_function("loadSync", neon_load_sync)?;
     cx.export_function("create", neon_create)?;
     cx.export_function("createSync", neon_create_sync)?;
+    // cx.export_function("loadOrCreate", neon_load_or_create)?; // FIXME:
+    // cx.export_function("loadOrCreateSync", neon_load_or_create_sync)?; // FIXME:
     cx.export_function("signObj", neon_sign_obj)?;
     cx.export_function("verifyObj", neon_verify_obj)?;
+    // cx.export_function("getTag", neon_get_tag)?; // FIXME:
+    // cx.export_function("hash", neon_hash)?; // FIXME:
     cx.export_function("box", neon_box)?;
     cx.export_function("unbox", neon_unbox)?;
+    // cx.export_function("unboxKey", neon_unbox_key)?; // FIXME:
+    // cx.export_function("unboxBody", neon_unbox_body)?; // FIXME:
+    // cx.export_function("secretBox", neon_secret_box)?; // FIXME:
+    // cx.export_function("secretUnbox", neon_secret_unbox)?; // FIXME:
     Ok(())
 });
