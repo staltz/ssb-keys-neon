@@ -125,20 +125,3 @@ pub fn clone_js_obj<'a, 'b>(
   }
   Ok(new_obj)
 }
-
-// TODO Not used! Delete perhaps?
-pub fn string_to_buffer<'a, 'b, 'c>(
-  cx: &mut ComputeContext<'b, 'c>,
-  s: String,
-) -> JsResult<'b, JsBuffer> {
-  let bytes = s.into_bytes();
-  let length = bytes.len() as usize;
-  let mut buffer = cx.buffer(bytes.len() as u32)?;
-  cx.borrow_mut(&mut buffer, |data| {
-    let slice = data.as_mut_slice();
-    for i in 0..length {
-      slice[i] = bytes[i];
-    }
-  });
-  Ok(buffer)
-}
