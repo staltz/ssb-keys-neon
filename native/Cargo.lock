@@ -145,6 +145,14 @@ version = "0.3.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
+name = "private-box"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "ssb-crypto 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "proc-macro2"
 version = "1.0.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -285,9 +293,9 @@ name = "ssb-keys-rs"
 version = "7.2.0"
 dependencies = [
  "base64 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "libsodium-sys 0.2.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "neon 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "neon-build 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "private-box 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "sodiumoxide 0.2.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "ssb-crypto 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "ssb-keyfile 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -385,6 +393,7 @@ dependencies = [
 "checksum neon-runtime 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)" = "d8465ac4ed3f340dead85e053b75a5f639f48ac6343b3523eff90a751758eead"
 "checksum neon-sys 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)" = "8ae4cf3871ca5a395077e68144c1754e94e9e1e3329e7f8399d999ca573ed89a"
 "checksum pkg-config 0.3.17 (registry+https://github.com/rust-lang/crates.io-index)" = "05da548ad6865900e60eaba7f589cc0783590a92e940c26953ff81ddbab2d677"
+"checksum private-box 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)" = "5f265d76fccc935bbb73b9c801e07930f82b42c5de70f2083c98708f56966563"
 "checksum proc-macro2 1.0.8 (registry+https://github.com/rust-lang/crates.io-index)" = "3acb317c6ff86a4e579dfa00fc5e6cca91ecbb4e7eb2df0468805b674eb88548"
 "checksum quote 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)" = "053a8c8bcc71fcce321828dc897a98ab9760bef03a4fc36693c231e5b3216cfe"
 "checksum redox_syscall 0.1.56 (registry+https://github.com/rust-lang/crates.io-index)" = "2439c63f3f6139d1b57529d16bc3b8bb855230c8efcc5d3a896c8bea7c3b1e84"
