@@ -88,6 +88,7 @@ pub fn json_stringify<'a, 'b>(
     .or_throw(&mut cx)
 }
 
+// TODO publish to some neon-helpers library?
 pub fn json_parse<'a, 'b>(
   mut cx: ComputeContext<'a, 'b>,
   args: Vec<Handle<JsString>>,
