@@ -103,6 +103,32 @@ impl Task for LoadTask {
   }
 }
 
+struct LoadOrCreateTask {
+  argument: String,
+}
+
+impl Task for LoadOrCreateTask {
+  type Output = (PublicKey, SecretKey);
+  type Error = Error;
+  type JsEvent = JsObject;
+
+  fn perform(&self) -> Result<(PublicKey, SecretKey), Error> {
+    internal_load(&self.argument).or_else(|_| internal_create(&self.argument))
+  }
+
+  fn complete(
+    self,
+    mut cx: TaskContext,
+    result: Result<(PublicKey, SecretKey), Error>,
+  ) -> JsResult<JsObject> {
+    let (pk, sk) = result
+      // TODO convert SSBError to Neon "Throw" with proper error info
+      .or_else(|_| cx.throw_error("unable to create secret file"))?;
+
+    cx.compute_scoped(|mut cx2| make_keys_obj(&mut cx2, &pk, &sk))
+  }
+}
+
 pub fn neon_create(mut cx: FunctionContext) -> JsResult<JsUndefined> {
   // TODO support all arguments (path, curve, isLegacy, cb)
   let path = cx
@@ -198,6 +224,35 @@ pub fn neon_load_sync(mut cx: FunctionContext) -> JsResult<JsObject> {
   let (pk, sk) = internal_load(&path).or_else(|_| cx.throw_error("unable to load secret file"))?;
 
   cx.compute_scoped(|mut cx2| make_keys_obj(&mut cx2, &pk, &sk))
+}
+
+pub fn neon_load_or_create(mut cx: FunctionContext) -> JsResult<JsUndefined> {
+  let path = cx
+    .argument::<JsValue>(0)
+    .and_then(|v| {
+      if v.is_a::<JsString>() {
+        v.downcast::<JsString>().or_throw(&mut cx)
+      } else {
+        cx.throw_error("expected string as the first argument to `loadOrCreate`")
+      }
+    })
+    .or_else(|_| cx.throw_error("failed to understand the `path` argument"))?
+    .value();
+
+  let cb = cx
+    .argument::<JsValue>(1)
+    .and_then(|f| {
+      if f.is_a::<JsFunction>() {
+        f.downcast::<JsFunction>().or_throw(&mut cx)
+      } else {
+        cx.throw_error("expected a callback function given to `loadOrCreate`")
+      }
+    })
+    .or_else(|_| cx.throw_error("failed to understand the `cb` argument"))?;
+
+  let task = LoadOrCreateTask { argument: path };
+  task.schedule(cb);
+  Ok(cx.undefined())
 }
 
 pub fn neon_load_or_create_sync(mut cx: FunctionContext) -> JsResult<JsObject> {

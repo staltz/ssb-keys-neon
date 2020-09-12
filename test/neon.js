@@ -10,8 +10,34 @@ tape('getTag', function (t) {
   t.end();
 });
 
+tape('loadOrCreate can load', function (t) {
+  var path = '/tmp/ssb-keys-1-' + Date.now();
+  var keys = ssbkeys.generate('ed25519');
+  keys.id = keys.id.substring(1);
+  fs.writeFileSync(path, JSON.stringify(keys));
+
+  ssbkeys.loadOrCreate(path, (err, k2) => {
+    t.error(err);
+    t.equal(k2.id, '@' + keys.id);
+    t.end();
+  });
+});
+
+tape('loadOrCreate can create', function (t) {
+  var path = '/tmp/ssb-keys-2-' + Date.now();
+  t.equal(fs.existsSync(path), false);
+
+  ssbkeys.loadOrCreate(path, (err, keys) => {
+    t.error(err);
+    t.true(keys.public.length > 20, 'keys.public is a long string');
+    t.true(keys.private.length > 20, 'keys.private is a long string');
+    t.true(keys.id.length > 20, 'keys.id is a long string');
+    t.end();
+  });
+});
+
 tape('loadOrCreateSync can load', function (t) {
-  var path = '/tmp/ssb-keys-load_' + Date.now();
+  var path = '/tmp/ssb-keys-3-' + Date.now();
   var keys = ssbkeys.generate('ed25519');
   keys.id = keys.id.substring(1);
   fs.writeFileSync(path, JSON.stringify(keys));
@@ -22,7 +48,7 @@ tape('loadOrCreateSync can load', function (t) {
 });
 
 tape('loadOrCreateSync can create', function (t) {
-  var path = '/tmp/ssb-keys-create_' + Date.now();
+  var path = '/tmp/ssb-keys-4-' + Date.now();
   t.equal(fs.existsSync(path), false);
 
   var keys = ssbkeys.loadOrCreateSync(path);
