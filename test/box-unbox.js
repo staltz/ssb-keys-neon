@@ -6,7 +6,6 @@ tape('box, unbox', function (t) {
   var bob = ssbkeys.generate();
 
   var boxed = ssbkeys.box({okay: true}, [bob.public, alice.public]);
-  console.log('boxed', boxed);
   var msg = ssbkeys.unbox(boxed, alice.private);
   t.deepEqual(msg, {okay: true});
   t.end();
