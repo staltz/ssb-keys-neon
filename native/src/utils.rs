@@ -109,6 +109,26 @@ pub fn json_parse<'a, 'b>(
 }
 
 // TODO publish to some neon-helpers library?
+pub fn buffer_from<'a, 'b>(
+  mut cx: ComputeContext<'a, 'b>,
+  args: Vec<Handle<JsValue>>,
+) -> JsResult<'a, JsBuffer> {
+  let from = cx
+    .global()
+    .get(&mut cx, "Buffer")?
+    .downcast::<JsObject>()
+    .or_throw(&mut cx)?
+    .get(&mut cx, "from")?
+    .downcast::<JsFunction>()
+    .or_throw(&mut cx)?;
+  let null = cx.null();
+  from
+    .call(&mut cx, null, args)?
+    .downcast::<JsBuffer>()
+    .or_throw(&mut cx)
+}
+
+// TODO publish to some neon-helpers library?
 pub fn clone_js_obj<'a, 'b>(
   mut cx: ComputeContext<'a, 'b>,
   obj: Handle<JsObject>,

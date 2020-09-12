@@ -6,6 +6,7 @@ extern crate sodiumoxide;
 extern crate ssb_keyfile;
 mod create;
 mod generate;
+mod hash;
 mod load;
 mod sig;
 mod unbox;
@@ -13,6 +14,7 @@ mod utils;
 
 use self::create::{neon_create, neon_create_sync};
 use self::generate::neon_generate;
+use self::hash::neon_hash;
 use self::load::{neon_load, neon_load_sync};
 use self::sig::{neon_sign_obj, neon_verify_obj};
 use self::unbox::{neon_box, neon_unbox};
@@ -32,7 +34,7 @@ register_module!(mut cx, {
     cx.export_function("signObj", neon_sign_obj)?;
     cx.export_function("verifyObj", neon_verify_obj)?;
     // cx.export_function("getTag", neon_get_tag)?; // FIXME:
-    // cx.export_function("hash", neon_hash)?; // FIXME:
+    cx.export_function("hash", neon_hash)?;
     cx.export_function("box", neon_box)?;
     cx.export_function("unbox", neon_unbox)?;
     // cx.export_function("unboxKey", neon_unbox_key)?; // FIXME:
