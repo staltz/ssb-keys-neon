@@ -38,6 +38,19 @@ fn internal_create(path: &String) -> Result<(PublicKey, SecretKey), Error> {
     .map(|_| (pk, sk))
 }
 
+fn internal_load(path: &String) -> Result<(PublicKey, SecretKey), SSBError> {
+  // TODO this path handling should be in ssb-keyfile
+  let path = Path::new(path).to_path_buf();
+  let _ = fs::create_dir_all(&path);
+  let path = if path.is_dir() {
+    path.join("secret")
+  } else {
+    path
+  };
+
+  ssb_keyfile::load_keys_from_path(&path)
+}
+
 struct CreateTask {
   argument: String,
 }
@@ -62,19 +75,6 @@ impl Task for CreateTask {
 
     cx.compute_scoped(|mut cx2| make_keys_obj(&mut cx2, &pk, &sk))
   }
-}
-
-fn internal_load(path: &String) -> Result<(PublicKey, SecretKey), SSBError> {
-  // TODO this path handling should be in ssb-keyfile
-  let path = Path::new(path).to_path_buf();
-  let _ = fs::create_dir_all(&path);
-  let path = if path.is_dir() {
-    path.join("secret")
-  } else {
-    path
-  };
-
-  ssb_keyfile::load_keys_from_path(&path)
 }
 
 struct LoadTask {
