@@ -199,3 +199,23 @@ pub fn neon_load_sync(mut cx: FunctionContext) -> JsResult<JsObject> {
 
   cx.compute_scoped(|mut cx2| make_keys_obj(&mut cx2, &pk, &sk))
 }
+
+pub fn neon_load_or_create_sync(mut cx: FunctionContext) -> JsResult<JsObject> {
+  let path = cx
+    .argument::<JsValue>(0)
+    .and_then(|v| {
+      if v.is_a::<JsString>() {
+        v.downcast::<JsString>().or_throw(&mut cx)
+      } else {
+        cx.throw_error("expected string as only argument to `loadOrCreateSync`")
+      }
+    })
+    .or_else(|_| cx.throw_error("failed to understand the `path` argument"))?
+    .value();
+
+  let (pk, sk) = internal_load(&path)
+    .or_else(|_| internal_create(&path))
+    .or_else(|_| cx.throw_error("unable to load nor create secret file"))?;
+
+  cx.compute_scoped(|mut cx2| make_keys_obj(&mut cx2, &pk, &sk))
+}
