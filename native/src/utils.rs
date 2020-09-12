@@ -146,3 +146,18 @@ pub fn clone_js_obj<'a, 'b>(
   }
   Ok(new_obj)
 }
+
+pub fn bytes_to_buffer<'a, 'b, 'c>(
+  cx: &mut ComputeContext<'b, 'c>,
+  bytes: &[u8],
+) -> JsResult<'b, JsBuffer> {
+  let length = bytes.len() as usize;
+  let mut buffer = cx.buffer(bytes.len() as u32)?;
+  cx.borrow_mut(&mut buffer, |data| {
+    let slice = data.as_mut_slice();
+    for i in 0..length {
+      slice[i] = bytes[i];
+    }
+  });
+  Ok(buffer)
+}
