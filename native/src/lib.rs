@@ -3,6 +3,7 @@ extern crate base64;
 extern crate neon;
 extern crate private_box;
 extern crate sodiumoxide;
+extern crate ssb_crypto;
 extern crate ssb_keyfile;
 mod generate;
 mod hash;
@@ -22,7 +23,7 @@ use self::load_create::{
 use self::misc::neon_get_tag;
 use self::secret::{neon_secret_box, neon_secret_unbox};
 use self::sig::{neon_sign_obj, neon_verify_obj};
-use self::unbox::{neon_box, neon_unbox};
+use self::unbox::{neon_box, neon_unbox, neon_unbox_body, neon_unbox_key};
 use neon::prelude::*;
 
 // FIXME: release new ssb-keyfile-rs with my PR
@@ -42,8 +43,8 @@ register_module!(mut cx, {
     cx.export_function("hash", neon_hash)?;
     cx.export_function("box", neon_box)?;
     cx.export_function("unbox", neon_unbox)?;
-    // cx.export_function("unboxKey", neon_unbox_key)?; // FIXME:
-    // cx.export_function("unboxBody", neon_unbox_body)?; // FIXME:
+    cx.export_function("unboxKey", neon_unbox_key)?;
+    cx.export_function("unboxBody", neon_unbox_body)?;
     cx.export_function("secretBox", neon_secret_box)?;
     cx.export_function("secretUnbox", neon_secret_unbox)?;
     Ok(())
