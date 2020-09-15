@@ -13,8 +13,11 @@
     "ssb-keys": "7.2.0"
   },
   "scripts": {
-    "install": "neon build",
+    "install": "npm run build && npm run setup-compat-tests",
+    "setup-compat-tests": "cp -ar ./node_modules/ssb-keys/test/ ./test-compat/",
     "build": "neon build",
-    "test": "tape test/*.js"
+    "test-compat": "tape test-compat/*.js",
+    "test-extra": "tape test-extra/*.js",
+    "test": "npm run test-compat && npm run test-extra"
   }
 }
