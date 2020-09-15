@@ -14,7 +14,7 @@
   },
   "scripts": {
     "install": "npm run build && npm run setup-compat-tests",
-    "setup-compat-tests": "cp -ar ./node_modules/ssb-keys/test/ ./test-compat/",
+    "setup-compat-tests": "cp -RT ./node_modules/ssb-keys/test ./test-compat",
     "build": "neon build",
     "test-compat": "tape test-compat/*.js",
     "test-extra": "tape test-extra/*.js",
