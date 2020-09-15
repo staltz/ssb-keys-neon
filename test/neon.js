@@ -10,7 +10,7 @@ tape('getTag', function (t) {
   t.end();
 });
 
-tape.only('unboxKey & unboxBody', function (t) {
+tape('unboxKey & unboxBody', function (t) {
   var alice = ssbkeys.generate();
   var bob = ssbkeys.generate();
 
