@@ -69,9 +69,7 @@ impl Task for CreateTask {
     mut cx: TaskContext,
     result: Result<(PublicKey, SecretKey), Error>,
   ) -> JsResult<JsObject> {
-    let (pk, sk) = result
-      // TODO convert Error to Neon "Throw" with proper error info
-      .or_else(|_| cx.throw_error("unable to create secret file"))?;
+    let (pk, sk) = result.or_else(|e| cx.throw_error(e.to_string()))?;
 
     cx.compute_scoped(|mut cx2| make_keys_obj(&mut cx2, &pk, &sk))
   }
@@ -95,9 +93,7 @@ impl Task for LoadTask {
     mut cx: TaskContext,
     result: Result<(PublicKey, SecretKey), SSBError>,
   ) -> JsResult<JsObject> {
-    let (pk, sk) = result
-      // TODO convert SSBError to Neon "Throw" with proper error info
-      .or_else(|_| cx.throw_error("unable to create secret file"))?;
+    let (pk, sk) = result.or_else(|e| cx.throw_error(e.to_string()))?;
 
     cx.compute_scoped(|mut cx2| make_keys_obj(&mut cx2, &pk, &sk))
   }
@@ -121,9 +117,7 @@ impl Task for LoadOrCreateTask {
     mut cx: TaskContext,
     result: Result<(PublicKey, SecretKey), Error>,
   ) -> JsResult<JsObject> {
-    let (pk, sk) = result
-      // TODO convert SSBError to Neon "Throw" with proper error info
-      .or_else(|_| cx.throw_error("unable to create secret file"))?;
+    let (pk, sk) = result.or_else(|e| cx.throw_error(e.to_string()))?;
 
     cx.compute_scoped(|mut cx2| make_keys_obj(&mut cx2, &pk, &sk))
   }
@@ -173,8 +167,7 @@ pub fn neon_create_sync(mut cx: FunctionContext) -> JsResult<JsObject> {
     .or_else(|_| cx.throw_error("failed to understand the `path` argument"))?
     .value();
 
-  let (pk, sk) =
-    internal_create(&path).or_else(|_| cx.throw_error("unable to create secret file"))?;
+  let (pk, sk) = internal_create(&path).or_else(|e| cx.throw_error(e.to_string()))?;
 
   cx.compute_scoped(|mut cx2| make_keys_obj(&mut cx2, &pk, &sk))
 }
@@ -221,7 +214,7 @@ pub fn neon_load_sync(mut cx: FunctionContext) -> JsResult<JsObject> {
     .or_else(|_| cx.throw_error("failed to understand the `path` argument"))?
     .value();
 
-  let (pk, sk) = internal_load(&path).or_else(|_| cx.throw_error("unable to load secret file"))?;
+  let (pk, sk) = internal_load(&path).or_else(|e| cx.throw_error(e.to_string()))?;
 
   cx.compute_scoped(|mut cx2| make_keys_obj(&mut cx2, &pk, &sk))
 }
@@ -270,7 +263,7 @@ pub fn neon_load_or_create_sync(mut cx: FunctionContext) -> JsResult<JsObject> {
 
   let (pk, sk) = internal_load(&path)
     .or_else(|_| internal_create(&path))
-    .or_else(|_| cx.throw_error("unable to load nor create secret file"))?;
+    .or_else(|e| cx.throw_error(e.to_string()))?;
 
   cx.compute_scoped(|mut cx2| make_keys_obj(&mut cx2, &pk, &sk))
 }
