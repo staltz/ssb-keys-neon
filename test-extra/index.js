@@ -1,6 +1,17 @@
 var tape = require('tape');
 var ssbkeys = require('../');
 var fs = require('fs');
+var path = '/tmp/ssb-keys_' + Date.now();
+
+tape('create and load presigil-legacy async', function (t) {
+  var keys = ssbkeys.generate('ed25519');
+  keys.id = keys.id.substring(1);
+  fs.writeFileSync(path, JSON.stringify(keys));
+  console.log(fs.readFileSync(path, 'utf-8'));
+  var k2 = ssbkeys.loadSync(path);
+  t.equal(k2.id, '@' + keys.id);
+  t.end();
+});
 
 tape('getTag', function (t) {
   var hash = 'lFluepOmDxEUcZWlLfz0rHU61xLQYxknAEd6z4un8P8=.sha256';
