@@ -48,7 +48,7 @@ fn internal_load(path: &String) -> Result<(PublicKey, SecretKey), SSBError> {
     path
   };
 
-  ssb_keyfile::load_keys_from_path(&path)
+  ssb_keyfile::load_keys_from_path(&path).map(|(a, b, _)| (a, b))
 }
 
 struct CreateTask {
