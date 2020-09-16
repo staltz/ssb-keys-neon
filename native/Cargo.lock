@@ -278,7 +278,7 @@ dependencies = [
 [[package]]
 name = "ssb-keyfile"
 version = "0.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
+source = "git+https://github.com/staltz/ssb-keyfile-rs?branch=use-multiformats-fork#5fe7a076608873b076a65b8443fe824471d89aab"
 dependencies = [
  "base64 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.104 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -286,7 +286,7 @@ dependencies = [
  "serde_json 1.0.45 (registry+https://github.com/rust-lang/crates.io-index)",
  "snafu 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "ssb-crypto 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
- "ssb-multiformats 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ssb-multiformats 0.2.1 (git+https://github.com/staltz/ssb-multiformats?branch=support-presigil-id)",
 ]
 
 [[package]]
@@ -299,13 +299,13 @@ dependencies = [
  "private-box 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "sodiumoxide 0.2.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "ssb-crypto 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
- "ssb-keyfile 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ssb-keyfile 0.3.1 (git+https://github.com/staltz/ssb-keyfile-rs?branch=use-multiformats-fork)",
 ]
 
 [[package]]
 name = "ssb-multiformats"
 version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
+source = "git+https://github.com/staltz/ssb-multiformats?branch=support-presigil-id#0fa58dd3724cb964b94c12e7bcad137cfca0c4e6"
 dependencies = [
  "base64 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.104 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -421,8 +421,8 @@ dependencies = [
 "checksum snafu-derive 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)" = "bdc75da2e0323f297402fd9c8fdba709bb04e4c627cbe31d19a2c91fc8d9f0e2"
 "checksum sodiumoxide 0.2.5 (registry+https://github.com/rust-lang/crates.io-index)" = "585232e78a4fc18133eef9946d3080befdf68b906c51b621531c37e91787fa2b"
 "checksum ssb-crypto 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)" = "9f2f46f463cc5da4e81c995fa1040b4a04abf74af09bde1739d37d1f5b7a911a"
-"checksum ssb-keyfile 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)" = "0ef171805fe109fdcddc88fa504d6f2d2f4901bbd7ae9bc0b6823f2dec7cfc7f"
-"checksum ssb-multiformats 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "2775dd55b70d06f7c2a0f3a4d78681325efa5584b15d3a173d9f046471778d33"
+"checksum ssb-keyfile 0.3.1 (git+https://github.com/staltz/ssb-keyfile-rs?branch=use-multiformats-fork)" = "<none>"
+"checksum ssb-multiformats 0.2.1 (git+https://github.com/staltz/ssb-multiformats?branch=support-presigil-id)" = "<none>"
 "checksum syn 1.0.14 (registry+https://github.com/rust-lang/crates.io-index)" = "af6f3550d8dff9ef7dc34d384ac6f107e5d31c8f57d9f28e0081503f547ac8f5"
 "checksum take_mut 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)" = "f764005d11ee5f36500a149ace24e00e3da98b0158b3e2d53a7495660d3f4d60"
 "checksum tar 0.4.26 (registry+https://github.com/rust-lang/crates.io-index)" = "b3196bfbffbba3e57481b6ea32249fbaf590396a52505a2615adbb79d9d826d3"
