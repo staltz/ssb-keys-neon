@@ -15,7 +15,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [10.x, 12.x, 14.x]
+        node-version: [10.x]
 
     steps:
       - uses: actions/checkout@v2
@@ -34,4 +34,6 @@ jobs:
       - name: Test
         run: pnpm test
       - name: Publish binaries
+        env:
+          NODE_PRE_GYP_GITHUB_TOKEN: ${{ secrets.NODE_PRE_GYP_GITHUB_TOKEN }}
         run: pnpm run upload-binary
