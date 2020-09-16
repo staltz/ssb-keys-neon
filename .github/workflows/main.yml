@@ -29,5 +29,9 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-      - run: pnpm install
-      - run: pnpm test
+      - name: Install
+        run: pnpm install
+      - name: Test
+        run: pnpm test
+      - name: Publish binaries
+        run: pnpm run upload-binary

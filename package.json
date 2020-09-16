@@ -17,15 +17,27 @@
     "neon-cli": "^0.3.3"
   },
   "devDependencies": {
-    "tape": "^3.0.3",
-    "ssb-keys": "7.2.0"
+    "node-pre-gyp": "github:amilajack/node-pre-gyp#neon-compat",
+    "node-pre-gyp-github": "^1.4.3",
+    "ssb-keys": "7.2.0",
+    "tape": "^3.0.3"
   },
   "scripts": {
-    "install": "npm run build && npm run setup-compat-tests",
+    "install": "node-pre-gyp install --fallback-to-build=false || neon build --release",
+    "package": "node-pre-gyp package",
+    "upload-binary": "node-pre-gyp package && node-pre-gyp-github publish",
     "setup-compat-tests": "cp -RT ./node_modules/ssb-keys/test ./test-compat",
     "build": "neon build",
-    "test-compat": "tape test-compat/*.js",
+    "test-compat": "npm run setup-compat-tests && tape test-compat/*.js",
     "test-extra": "tape test-extra/*.js",
     "test": "npm run test-compat && npm run test-extra"
+  },
+  "binary": {
+    "module_name": "index",
+    "host": "https://github.com/staltz/ssb-neon-keys/releases/download/",
+    "remote_path": "{version}",
+    "package_name": "{node_abi}-{platform}-{arch}.tar.gz",
+    "module_path": "./native",
+    "pkg_path": "."
   }
 }
