@@ -10,7 +10,6 @@
     "url": "git+https://github.com/staltz/ssb-neon-keys.git"
   },
   "files": [
-    "native/index.node",
     "lib"
   ],
   "dependencies": {
