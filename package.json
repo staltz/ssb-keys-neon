@@ -18,6 +18,6 @@
     "build": "neon build",
     "test-compat": "tape test-compat/*.js",
     "test-extra": "tape test-extra/*.js",
-    "test": "npm run test-extra && npm run test-compat"
+    "test": "npm run test-compat && npm run test-extra"
   }
 }
