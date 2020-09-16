@@ -29,11 +29,13 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-      - name: Install
+      - name: NPM Install
         run: pnpm install
       - name: Test
         run: pnpm test
-      - name: Publish binaries
+      - name: Publish binaries if commit is a release
         env:
           NODE_PRE_GYP_GITHUB_TOKEN: ${{ secrets.NODE_PRE_GYP_GITHUB_TOKEN }}
-        run: pnpm run upload-binary
+        run: |
+          COMMIT_MESSAGE=$(git log --format=%B --no-merges -n 1 | tr -d '\n')
+          if [[ ${COMMIT_MESSAGE} =~ ^release.* ]]; then pnpm run upload-binary || exit 0; fi;
