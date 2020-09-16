@@ -13,11 +13,11 @@
     "lib"
   ],
   "dependencies": {
-    "neon-cli": "^0.3.3"
+    "neon-cli": "^0.3.3",
+    "node-pre-gyp": "github:amilajack/node-pre-gyp#neon-compat",
+    "node-pre-gyp-github": "^1.4.3"
   },
   "devDependencies": {
-    "node-pre-gyp": "github:amilajack/node-pre-gyp#neon-compat",
-    "node-pre-gyp-github": "^1.4.3",
     "ssb-keys": "7.2.0",
     "tape": "^3.0.3"
   },
