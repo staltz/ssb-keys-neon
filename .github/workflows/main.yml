@@ -43,6 +43,7 @@ jobs:
           COMMIT_MESSAGE=$(git log --format=%B --no-merges -n 1 | tr -d '\n')
           if [[ ${COMMIT_MESSAGE} =~ ^release.* ]]; then
             pnpm run build
+            pnpm run minify
             pnpm run package
             pnpm run upload-binary
           fi

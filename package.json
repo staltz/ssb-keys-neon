@@ -23,10 +23,11 @@
   },
   "scripts": {
     "install": "if [ ! -f \"./native/Cargo.toml\" ]; then node-pre-gyp install; fi",
+    "build": "neon build --release",
+    "minify": "rm -rf ./native/target",
     "package": "node-pre-gyp package",
     "upload-binary": "node-pre-gyp-github publish",
     "setup-compat-tests": "cp -RT ./node_modules/ssb-keys/test ./test-compat",
-    "build": "neon build --release",
     "pretest": "neon build",
     "test-compat": "npm run setup-compat-tests && tape test-compat/*.js",
     "test-extra": "tape test-extra/*.js",
