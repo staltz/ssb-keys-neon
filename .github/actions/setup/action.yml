@@ -1,0 +1,20 @@
+name: 'Setup Rust, Node, pnpm'
+inputs:
+  node-version:
+    description: 'Version of Node.js'
+    required: true
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+    - name: Set up Node.js ${{ node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ node-version }}
+    - name: Set up pnpm 5
+      uses: pnpm/action-setup@v1.2.0
+      with:
+        version: 5.x.x
