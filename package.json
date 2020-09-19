@@ -22,7 +22,7 @@
     "tape": "^3.0.3"
   },
   "scripts": {
-    "install": "if [ $npm_package_name != \"ssb-neon-keys\" ]; then node-pre-gyp install; fi",
+    "install": "if [ ! -f \"./native/Cargo.toml\" ]; then node-pre-gyp install; fi",
     "package": "node-pre-gyp package",
     "upload-binary": "node-pre-gyp package && node-pre-gyp-github publish",
     "setup-compat-tests": "cp -RT ./node_modules/ssb-keys/test ./test-compat",
