@@ -25,7 +25,8 @@
     "package": "node-pre-gyp package",
     "upload-binary": "node-pre-gyp-github publish",
     "setup-compat-tests": "cp -RT ./node_modules/ssb-keys/test ./test-compat",
-    "pretest": "neon build",
+    "build-debug": "neon build",
+    "pretest": "npm run build-debug",
     "test-compat": "npm run setup-compat-tests && tape test-compat/*.js",
     "test-extra": "tape test-extra/*.js",
     "test": "npm run test-compat && npm run test-extra"

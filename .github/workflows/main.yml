@@ -29,16 +29,19 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
-      - name: Set up PNPM 5.x
+      - name: Set up pnpm 5
         uses: pnpm/action-setup@v1.2.0
         with:
           version: 5.x.x
 
-      - name: NPM Install
+      - name: pnpm install
         run: pnpm install
 
+      - name: Compile
+        run: npm run build-debug
+
       - name: Test
-        run: pnpm test
+        run: npm test
 
   release:
     name: Publish binaries
@@ -61,24 +64,24 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
-      - name: Set up PNPM 5.x
+      - name: Set up pnpm 5
         uses: pnpm/action-setup@v1.2.0
         with:
           version: 5.x.x
 
-      - name: NPM Install
+      - name: pnpm install
         run: pnpm install
 
       - name: Build .node
-        run: pnpm run build
+        run: npm run build
 
       - name: Pre-minify .tar size
-        run: pnpm run minify
+        run: npm run minify
 
       - name: Pack up .tar
-        run: pnpm run package
+        run: npm run package
 
       - name: Upload .tar to GitHub releases
         env:
           NODE_PRE_GYP_GITHUB_TOKEN: ${{ secrets.NODE_PRE_GYP_GITHUB_TOKEN }}
-        run: pnpm run upload-binary
+        run: npm run upload-binary
