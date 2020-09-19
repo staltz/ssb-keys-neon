@@ -10,7 +10,7 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
 
     strategy:
@@ -35,6 +35,31 @@ jobs:
 
       - name: Test
         run: pnpm test
+
+  release:
+    name: Publish binaries
+    needs: test
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [10.x]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - uses: pnpm/action-setup@v1.2.0
+        with:
+          version: 5.x.x
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: NPM Install
+        run: pnpm install
 
       - name: Publish binaries if commit is a release
         env:
