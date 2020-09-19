@@ -9,9 +9,6 @@
     "type": "git",
     "url": "git+https://github.com/staltz/ssb-neon-keys.git"
   },
-  "files": [
-    "lib"
-  ],
   "dependencies": {
     "neon-cli": "~0.4.1",
     "node-pre-gyp": "^0.15.0",
@@ -22,7 +19,7 @@
     "tape": "^3.0.3"
   },
   "scripts": {
-    "install": "if [ ! -f \"./native/Cargo.toml\" ]; then node-pre-gyp install; fi",
+    "install": "if [ ! -d \"./.github\" ]; then node-pre-gyp install --fallback-to-build=false || neon build --release; fi",
     "build": "neon build --release",
     "minify": "rm -rf ./native/target",
     "package": "node-pre-gyp package",

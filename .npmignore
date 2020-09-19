@@ -1,0 +1,12 @@
+.github
+native/target
+native/index.node
+native/artifacts.json
+**/*~
+**/node_modules
+**/.DS_Store
+.vscode
+.gitignore
+pnpm-lock.yaml
+/test-compat
+/test-extra
