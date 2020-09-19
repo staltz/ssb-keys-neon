@@ -13,8 +13,8 @@
     "lib"
   ],
   "dependencies": {
-    "neon-cli": "^0.3.3",
-    "node-pre-gyp": "github:amilajack/node-pre-gyp#neon-compat",
+    "neon-cli": "~0.4.1",
+    "node-pre-gyp": "^0.15.0",
     "node-pre-gyp-github": "^1.4.3"
   },
   "devDependencies": {
@@ -22,11 +22,12 @@
     "tape": "^3.0.3"
   },
   "scripts": {
-    "postinstall": "node-pre-gyp install --fallback-to-build=false || neon build --release",
+    "install": "if [ $npm_package_name != \"ssb-neon-keys\" ]; then node-pre-gyp install; fi",
     "package": "node-pre-gyp package",
     "upload-binary": "node-pre-gyp package && node-pre-gyp-github publish",
     "setup-compat-tests": "cp -RT ./node_modules/ssb-keys/test ./test-compat",
-    "build": "neon build",
+    "build": "neon build --release",
+    "pretest": "neon build",
     "test-compat": "npm run setup-compat-tests && tape test-compat/*.js",
     "test-extra": "tape test-extra/*.js",
     "test": "npm run test-compat && npm run test-extra"
