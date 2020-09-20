@@ -12,11 +12,13 @@ env:
 jobs:
   test:
     name: Test
-    runs-on: ubuntu-latest
 
     strategy:
       matrix:
         node-version: [10.x]
+        os: [ARM64, ubuntu-latest]
+
+    runs-on: ${{ matrix.os }}
 
     steps:
       - name: Checkout the repo
