@@ -12,7 +12,6 @@ env:
 jobs:
   test:
     name: Test
-    if: false
 
     strategy:
       matrix:
@@ -48,8 +47,8 @@ jobs:
 
   build-release:
     name: Build release for Node
-    # needs: test
-    # if: ${{ startsWith(github.event.head_commit.message, 'release') }}
+    needs: test
+    if: ${{ startsWith(github.event.head_commit.message, 'release') }}
 
     strategy:
       matrix:
@@ -90,8 +89,8 @@ jobs:
 
   build-release-electron:
     name: Build release for Electron
-    # needs: test
-    # if: ${{ startsWith(github.event.head_commit.message, 'release') }}
+    needs: test
+    if: ${{ startsWith(github.event.head_commit.message, 'release') }}
 
     strategy:
       matrix:
@@ -134,108 +133,34 @@ jobs:
           name: prebuilds
           path: prebuilds/
 
-  check:
-    name: Check prebuild artifacts
+  publish:
+    name: NPM Publish
     needs: [build-release, build-release-electron]
+    if: ${{ startsWith(github.event.head_commit.message, 'release') }}
 
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [10.x]
+        os: [ubuntu-latest]
+
+    runs-on: ${{ matrix.os }}
 
     steps:
       - name: Checkout the repo
         uses: actions/checkout@v2
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+
       - uses: actions/download-artifact@v2
         with:
           name: prebuilds
           path: prebuilds
-      # - run: rm -rf prebuilds/artifact
-      - run: ls -laR prebuilds
 
-  release:
-    name: Publish binaries
-    needs: test
-    if: ${{ startsWith(github.event.head_commit.message, 'release') }}
-    runs-on: ubuntu-latest
+      - name: Check prebuilds
+        run: ls -laR prebuilds
 
-    strategy:
-      matrix:
-        node-version: [10.x]
-
-    steps:
-      - name: Checkout the repo
-        uses: actions/checkout@v2
-      - name: Set up Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-      - name: Set up Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
-        with:
-          node-version: ${{ matrix.node-version }}
-      - name: Set up pnpm 5
-        uses: pnpm/action-setup@v1.2.0
-        with:
-          version: 5.x.x
-
-      - name: pnpm install
-        run: pnpm install
-
-      - name: Compile .node
-        run: npm run build-release
-
-      - name: Pre-minify .tar size
-        run: npm run minify
-
-      - name: Pack up .tar
-        run: npm run package
-
-      - name: Upload .tar to GitHub releases
+      - run: npm publish
         env:
-          NODE_PRE_GYP_GITHUB_TOKEN: ${{ secrets.NODE_PRE_GYP_GITHUB_TOKEN }}
-        run: npm run upload-binary
-
-  release-electron:
-    name: Publish Electron binaries
-    needs: test
-    if: ${{ startsWith(github.event.head_commit.message, 'release') }}
-    runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [10.x]
-        electron-version: [7]
-
-    steps:
-      - name: Checkout the repo
-        uses: actions/checkout@v2
-      - name: Set up Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-      - name: Set up Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
-        with:
-          node-version: ${{ matrix.node-version }}
-      - name: Set up pnpm 5
-        uses: pnpm/action-setup@v1.2.0
-        with:
-          version: 5.x.x
-
-      - name: pnpm install
-        run: pnpm install
-
-      - name: Install Electron ${{ matrix.electron-version }}
-        run: pnpm install electron@${{ matrix.electron-version }}
-
-      - name: Compile .node
-        run: npm run build-electron-release
-
-      - name: Pre-minify .tar size
-        run: npm run minify
-
-      - name: Pack up .tar
-        run: npm run package-electron
-
-      - name: Upload .tar to GitHub releases
-        env:
-          NODE_PRE_GYP_GITHUB_TOKEN: ${{ secrets.NODE_PRE_GYP_GITHUB_TOKEN }}
-        run: npm run upload-binary
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
