@@ -42,8 +42,8 @@ jobs:
       - name: Compile .node
         run: npm run build-release
 
-      - name: Test
-        run: npm test
+      # - name: Test
+      #   run: npm test
 
       - name: Tag .node as prebuild
         run: npm run tag-prebuild
@@ -64,8 +64,7 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           path: prebuilds
-      - run: ls -la prebuilds
-      - run: tree prebuilds
+      - run: ls -laR prebuilds
 
   release:
     name: Publish binaries
