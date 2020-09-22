@@ -85,7 +85,8 @@ jobs:
 
       - uses: actions/upload-artifact@v2
         with:
-          path: prebuilds/**/*
+          name: prebuilds
+          path: prebuilds/
 
   build-release-electron:
     name: Build release for Electron
@@ -130,7 +131,8 @@ jobs:
 
       - uses: actions/upload-artifact@v2
         with:
-          path: prebuilds/**/*
+          name: prebuilds
+          path: prebuilds/
 
   check:
     name: Check prebuild artifacts
@@ -143,6 +145,7 @@ jobs:
         uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
         with:
+          name: prebuilds
           path: prebuilds
       # - run: rm -rf prebuilds/artifact
       - run: ls -laR prebuilds
