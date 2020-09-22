@@ -11,28 +11,27 @@
   },
   "dependencies": {
     "neon-cli": "~0.4.1",
-    "node-pre-gyp": "^0.15.0",
-    "node-pre-gyp-github": "^1.4.3"
+    "neon-load-or-build": "1.0.0"
   },
   "devDependencies": {
     "electron-build-env": "^0.2.0",
+    "neon-tag-prebuild": "^1.0.0",
     "ssb-keys": "7.2.0",
     "tape": "^3.0.3"
   },
   "scripts": {
-    "install": "if [ ! -d \"./.github\" ]; then node-pre-gyp install --fallback-to-build=false || neon build --release; fi",
+    "install": "if [ ! -d .git ]; then neon-load-or-build; fi",
     "build-debug": "neon build",
     "build-release": "neon build --release",
-    "build-electron-release": "electron-build-env neon build --release",
-    "minify": "rm -rf ./native/target",
-    "package": "node-pre-gyp package",
-    "package-electron": "electron-build-env node-pre-gyp package --runtime=electron",
-    "upload-binary": "node-pre-gyp-github publish --release",
+    "build-release-electron": "electron-build-env neon build --release",
+    "tag-prebuild": "neon-tag-prebuild",
+    "tag-prebuild-electron": "electron-build-env neon-tag-prebuild",
     "setup-compat-tests": "cp -RT ./node_modules/ssb-keys/test ./test-compat",
     "pretest": "npm run build-debug",
     "test-compat": "npm run setup-compat-tests && tape test-compat/*.js",
     "test-extra": "tape test-extra/*.js",
-    "test": "npm run test-compat && npm run test-extra"
+    "test": "npm run test-compat && npm run test-extra",
+    "prepublishOnly": "if [ -z \"$CI\" ]; then echo \"can only npm publish from CI\" && exit 1; fi"
   },
   "binary": {
     "module_name": "index",
