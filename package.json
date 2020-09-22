@@ -12,22 +12,22 @@
   "dependencies": {
     "mkdirp": "^1.0.4",
     "neon-cli": "~0.4.1",
-    "neon-load-or-build": "staltz/neon-load-or-build#thisone",
+    "neon-load-or-build": "1.0.0",
     "node-abi": "^2.19.1"
   },
   "devDependencies": {
     "electron-build-env": "^0.2.0",
+    "neon-tag-prebuild": "^1.0.0",
     "ssb-keys": "7.2.0",
     "tape": "^3.0.3"
   },
   "scripts": {
     "install": "neon-load-or-build",
     "build-debug": "neon build",
-    "check": "node check.js",
     "build-release": "neon build --release",
     "build-release-electron": "electron-build-env neon build --release",
-    "tag-prebuild": "node tag-as-prebuild.js",
-    "tag-prebuild-electron": "electron-build-env node tag-as-prebuild.js",
+    "tag-prebuild": "neon-tag-prebuild",
+    "tag-prebuild-electron": "electron-build-env neon-tag-prebuild",
     "setup-compat-tests": "cp -RT ./node_modules/ssb-keys/test ./test-compat",
     "pretest": "npm run build-debug",
     "test-compat": "npm run setup-compat-tests && tape test-compat/*.js",
