@@ -32,7 +32,8 @@
     "pretest": "npm run build-debug",
     "test-compat": "npm run setup-compat-tests && tape test-compat/*.js",
     "test-extra": "tape test-extra/*.js",
-    "test": "npm run test-compat && npm run test-extra"
+    "test": "npm run test-compat && npm run test-extra",
+    "prepublishOnly": "if [ -z \"$CI\" ]; then echo \"can only npm publish from CI\" && exit 1; fi"
   },
   "binary": {
     "module_name": "index",
