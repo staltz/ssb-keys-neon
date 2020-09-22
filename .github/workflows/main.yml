@@ -15,7 +15,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [10.x]
+        node-version: [10.x, 12.x]
         os: [ubuntu-latest]
 
     runs-on: ${{ matrix.os }}
@@ -65,6 +65,7 @@ jobs:
         with:
           path: prebuilds
       - run: ls -la prebuilds
+      - run: tree prebuilds
 
   release:
     name: Publish binaries
