@@ -11,7 +11,45 @@ env:
 
 jobs:
   test:
-    name: Build and test
+    name: Test
+    if: false
+
+    strategy:
+      matrix:
+        node-version: [10.x]
+        os: [ubuntu-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v2
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Set up pnpm 5
+        uses: pnpm/action-setup@v1.2.0
+        with:
+          version: 5.x.x
+
+      - name: pnpm install
+        run: pnpm install
+
+      - name: Compile .node
+        run: npm run build-debug
+
+      - name: Test
+        run: npm test
+
+  build-release:
+    name: Build release binaries for Node
+    # needs: test
+    # if: ${{ startsWith(github.event.head_commit.message, 'release') }}
 
     strategy:
       matrix:
@@ -42,9 +80,6 @@ jobs:
       - name: Compile .node
         run: npm run build-release
 
-      # - name: Test
-      #   run: npm test
-
       - name: Tag .node as prebuild
         run: npm run tag-prebuild
 
@@ -52,9 +87,54 @@ jobs:
         with:
           path: prebuilds/**/*
 
+  build-release-electron:
+    name: Build release binaries for Electron
+    # needs: test
+    # if: ${{ startsWith(github.event.head_commit.message, 'release') }}
+
+    strategy:
+      matrix:
+        node-version: [10.x]
+        os: [ubuntu-latest]
+        electron-version: [7]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v2
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Set up pnpm 5
+        uses: pnpm/action-setup@v1.2.0
+        with:
+          version: 5.x.x
+
+      - name: pnpm install
+        run: pnpm install
+
+      - name: Install Electron ${{ matrix.electron-version }}
+        run: pnpm install electron@${{ matrix.electron-version }}
+
+      - name: Compile .node
+        run: npm run build-release-electron
+
+      - name: Tag .node as prebuild
+        run: npm run tag-prebuild-electron
+
+      - uses: actions/upload-artifact@v2
+        with:
+          path: prebuilds/**/*
+
   check:
     name: Check prebuild artifacts
-    needs: test
+    needs: [build-release, build-release-electron]
 
     runs-on: ubuntu-latest
 
@@ -64,6 +144,7 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           path: prebuilds
+      - run: rm -rf prebuilds/artifact
       - run: ls -laR prebuilds
 
   release:
