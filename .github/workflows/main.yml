@@ -11,7 +11,7 @@ env:
 
 jobs:
   test:
-    name: Test
+    name: Build and test
 
     strategy:
       matrix:
@@ -40,10 +40,31 @@ jobs:
         run: pnpm install
 
       - name: Compile .node
-        run: npm run build-debug
+        run: npm run build-release
 
       - name: Test
         run: npm test
+
+      - name: Tag .node as prebuild
+        run: npm run tag-prebuild
+
+      - uses: actions/upload-artifact@v2
+        with:
+          path: prebuilds/**/*
+
+  check:
+    name: Check prebuild artifacts
+    needs: test
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v2
+      - uses: actions/download-artifact@v2
+        with:
+          path: prebuilds
+      - run: ls -la prebuilds
 
   release:
     name: Publish binaries

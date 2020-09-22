@@ -10,6 +10,7 @@
     "url": "git+https://github.com/staltz/ssb-neon-keys.git"
   },
   "dependencies": {
+    "mkdirp": "^1.0.4",
     "neon-cli": "~0.4.1",
     "neon-load-or-build": "staltz/neon-load-or-build#thisone"
   },
@@ -25,6 +26,7 @@
     "build-electron-release": "electron-build-env neon build --release",
     "minify": "rm -rf ./native/target",
     "package": "node-pre-gyp package",
+    "tag-prebuild": "node tag-as-prebuild.js",
     "package-electron": "electron-build-env node-pre-gyp package --runtime=electron",
     "upload-binary": "node-pre-gyp-github publish --release",
     "setup-compat-tests": "cp -RT ./node_modules/ssb-keys/test ./test-compat",
