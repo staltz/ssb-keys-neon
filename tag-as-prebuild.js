@@ -4,6 +4,7 @@ var fs = require('fs');
 var os = require('os');
 var path = require('path');
 var mkdirp = require('mkdirp');
+var nodeAbi = require('node-abi');
 
 var vars = (process.config && process.config.variables) || {};
 var abi = process.versions.modules;
@@ -31,6 +32,7 @@ fs.copyFile(orig, dest, (err) => {
 function isElectron() {
   if (process.versions && process.versions.electron) return true;
   if (process.env.ELECTRON_RUN_AS_NODE) return true;
+  if (process.env.npm_config_runtime === 'electron') return true;
   return (
     typeof window !== 'undefined' &&
     window.process &&
@@ -43,9 +45,12 @@ function isAlpine(platform) {
 }
 
 function getFilename() {
+  var target = isElectron()
+    ? process.env.npm_config_target
+    : process.versions.node;
   var tags = [];
   tags.push(runtime);
-  tags.push('abi' + abi);
+  tags.push('abi' + nodeAbi.getAbi(target, runtime));
   // if (uv) tags.push('uv' + uv); // FIXME: support?
   if (armv) tags.push('armv' + abi);
   // if (libc) tags.push(libc); // FIXME: support?
