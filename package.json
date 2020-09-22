@@ -22,7 +22,7 @@
     "tape": "^3.0.3"
   },
   "scripts": {
-    "install": "neon-load-or-build",
+    "install": "if [ ! -d .git ]; then neon-load-or-build; fi",
     "build-debug": "neon build",
     "build-release": "neon build --release",
     "build-release-electron": "electron-build-env neon build --release",
