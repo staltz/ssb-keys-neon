@@ -152,6 +152,7 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
+          registry-url: https://registry.npmjs.org/
 
       - uses: actions/download-artifact@v2
         with:
@@ -161,6 +162,6 @@ jobs:
       - name: Check prebuilds
         run: ls -laR prebuilds
 
-      - run: npm publish
+      - run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
