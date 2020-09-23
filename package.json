@@ -23,7 +23,7 @@
   },
   "scripts": {
     "install": "run-script-os",
-    "install:win32": "IF EXIST \".git\" neon-load-or-build",
+    "install:win32": "IF NOT EXIST \".git\" neon-load-or-build",
     "install:nix": "if [ ! -d .git ]; then neon-load-or-build; fi",
     "build-debug": "neon build",
     "build-release": "neon build --release",
