@@ -214,3 +214,5 @@ jobs:
           force-add: 'true'
           rebase: 'true'
           files: package.json prebuilds/
+          name: Andre Staltz
+          email: andre@staltz.com
