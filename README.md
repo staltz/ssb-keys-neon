@@ -127,6 +127,32 @@ Versions of ssb-keys that are mirrored by ssb-neon-keys currently include (and i
     - Electron 8.x
     - Electron 9.x
     - Electron 10.x
+- 7.2.2 (as of `ssb-neon-keys@7.2.2-1`)
+  - macOS (darwin-x64)
+    - Node 10.x
+    - Node 12.x
+    - Node 14.x
+    - Electron 7.x
+    - Electron 8.x
+    - Electron 9.x
+    - Electron 10.x
+  - Linux (linux-x64)
+    - Node 10.x
+    - Node 12.x
+    - Node 14.x
+    - Electron 7.x
+    - Electron 8.x
+    - Electron 9.x
+    - Electron 10.x
+  - Windows (win32-x64)
+    - Node 10.x
+    - Node 12.x
+    - Node 14.x
+    - Electron 7.x
+    - Electron 8.x
+    - Electron 9.x
+    - Electron 10.x
+
 
 ## License
 
