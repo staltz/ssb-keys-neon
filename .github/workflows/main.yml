@@ -205,6 +205,12 @@ jobs:
       - name: Detect version to replace
         run: echo ::set-env name=BRANCH_VERSION::$(node .github/get-pkg-version.js)
 
+      - name: Delete git branch replace-${{ env.BRANCH_VERSION }}
+        uses: dawidd6/action-delete-branch@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branches: replace-${{ env.BRANCH_VERSION }}
+
       - name: Push git branch replace-${{ env.BRANCH_VERSION }}
         uses: github-actions-x/commit@v2.7
         with:
