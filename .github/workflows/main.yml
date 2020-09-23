@@ -48,7 +48,7 @@ jobs:
 
   build-release:
     name: Build release for Node
-    needs: test
+    # needs: test
     if: ${{ startsWith(github.event.head_commit.message, 'release') }}
 
     strategy:
@@ -91,7 +91,7 @@ jobs:
 
   build-release-electron:
     name: Build release for Electron
-    needs: test
+    # needs: test
     if: ${{ startsWith(github.event.head_commit.message, 'release') }}
 
     strategy:
