@@ -12,6 +12,7 @@ env:
 jobs:
   test:
     name: Test
+    if: false
 
     strategy:
       matrix:
