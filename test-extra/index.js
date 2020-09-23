@@ -80,3 +80,19 @@ tape('loadOrCreateSync can create', function (t) {
   t.true(keys.id.length > 20, 'keys.id is a long string');
   t.end();
 });
+
+tape('ssbSecretKeyToPrivateBoxSecret accepts keys object', function (t) {
+  var keys = ssbkeys.generate();
+  var curve = ssbkeys.ssbSecretKeyToPrivateBoxSecret(keys);
+  t.true(Buffer.isBuffer(curve));
+  t.equals(curve.length, 32);
+  t.end();
+});
+
+tape('ssbSecretKeyToPrivateBoxSecret accepts keys.private', function (t) {
+  var keys = ssbkeys.generate();
+  var curve = ssbkeys.ssbSecretKeyToPrivateBoxSecret(keys.private);
+  t.true(Buffer.isBuffer(curve));
+  t.equals(curve.length, 32);
+  t.end();
+});
