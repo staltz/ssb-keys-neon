@@ -17,11 +17,14 @@
     "cpy-cli": "^3.1.1",
     "electron-build-env": "^0.2.0",
     "neon-tag-prebuild": "^1.0.0",
+    "run-script-os": "^1.1.1",
     "ssb-keys": "7.2.0",
     "tape": "^3.0.3"
   },
   "scripts": {
-    "install": "if [ ! -d .git ]; then neon-load-or-build; fi",
+    "install": "run-script-os",
+    "install:win32": "IF EXIST \".git\" neon-load-or-build",
+    "install:nix": "if [ ! -d .git ]; then neon-load-or-build; fi",
     "build-debug": "neon build",
     "build-release": "neon build --release",
     "build-release-electron": "electron-build-env neon build --release",
