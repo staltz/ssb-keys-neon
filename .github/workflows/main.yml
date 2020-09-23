@@ -208,6 +208,7 @@ jobs:
 
       - name: Delete git branch replace-${{ env.BRANCH_VERSION }}
         uses: dawidd6/action-delete-branch@v3
+        continue-on-error: true
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           branches: replace-${{ env.BRANCH_VERSION }}
