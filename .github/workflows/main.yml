@@ -10,8 +10,31 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  trythis:
+    strategy:
+      matrix:
+        node-version: [10.x]
+        os: [ubuntu-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v2
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Detect version to replace
+        run: echo ::set-env name=BRANCH_VERSION::$(node .github/get-pkg-version.js)
+
+      - name: Spit it out ${{ env.BRANCH_VERSION }}
+        run: echo food@${{ env.BRANCH_VERSION }}
+
   test:
     name: Test
+    if: false
 
     strategy:
       matrix:
@@ -48,7 +71,8 @@ jobs:
   build-release:
     name: Build release for Node
     needs: test
-    if: ${{ startsWith(github.event.head_commit.message, 'release') }}
+    # if: ${{ startsWith(github.event.head_commit.message, 'release') }}
+    if: false
 
     strategy:
       matrix:
@@ -91,7 +115,8 @@ jobs:
   build-release-electron:
     name: Build release for Electron
     needs: test
-    if: ${{ startsWith(github.event.head_commit.message, 'release') }}
+    # if: ${{ startsWith(github.event.head_commit.message, 'release') }}
+    if: false
 
     strategy:
       matrix:
@@ -138,7 +163,8 @@ jobs:
   publish:
     name: NPM Publish
     needs: [build-release, build-release-electron]
-    if: ${{ startsWith(github.event.head_commit.message, 'release') }}
+    # if: ${{ startsWith(github.event.head_commit.message, 'release') }}
+    if: false
 
     strategy:
       matrix:
@@ -173,7 +199,8 @@ jobs:
   replace:
     name: Update replacer branch
     needs: [publish]
-    if: ${{ startsWith(github.event.head_commit.message, 'release') }}
+    # if: ${{ startsWith(github.event.head_commit.message, 'release') }}
+    if: false
 
     strategy:
       matrix:
@@ -203,7 +230,7 @@ jobs:
         run: node .github/set-pkg-replacer-name.js
 
       - name: Detect version to replace
-        run: echo '::set-env name=BRANCH_VERSION::$(node .github/get-pkg-version.js)'
+        run: echo ::set-env name=BRANCH_VERSION::$(node .github/get-pkg-version.js)
 
       - name: Push git branch replace-${{ env.BRANCH_VERSION }}
         uses: github-actions-x/commit@v2.7
