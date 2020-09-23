@@ -82,7 +82,8 @@ jobs:
       - name: Tag .node as prebuild
         run: npm run tag-prebuild
 
-      - uses: actions/upload-artifact@v2
+      - name: Upload prebuild artifacts
+        uses: actions/upload-artifact@v2
         with:
           name: prebuilds
           path: prebuilds/
@@ -128,7 +129,8 @@ jobs:
       - name: Tag .node as prebuild
         run: npm run tag-prebuild-electron
 
-      - uses: actions/upload-artifact@v2
+      - name: Upload prebuild artifacts
+        uses: actions/upload-artifact@v2
         with:
           name: prebuilds
           path: prebuilds/
@@ -154,7 +156,8 @@ jobs:
           node-version: ${{ matrix.node-version }}
           registry-url: https://registry.npmjs.org/
 
-      - uses: actions/download-artifact@v2
+      - name: Download prebuild artifacts
+        uses: actions/download-artifact@v2
         with:
           name: prebuilds
           path: prebuilds
@@ -162,6 +165,52 @@ jobs:
       - name: Check prebuilds
         run: ls -laR prebuilds
 
-      - run: npm publish --access public
+      - name: NPM Publish
+        run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  replace:
+    name: Update replacer branch
+    needs: [publish]
+    if: ${{ startsWith(github.event.head_commit.message, 'release') }}
+
+    strategy:
+      matrix:
+        node-version: [10.x]
+        os: [ubuntu-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v2
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Download prebuild artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: prebuilds
+          path: prebuilds
+
+      - name: Check prebuilds
+        run: ls -laR prebuilds
+
+      - name: Set package.json name to "ssb-keys"
+        run: node .github/set-pkg-replacer-name.js
+
+      - name: Detect version to replace
+        run: echo '::set-env name=BRANCH_VERSION::$(node .github/get-pkg-version.js)'
+
+      - name: Push git branch replace-${{ env.BRANCH_VERSION }}
+        uses: github-actions-x/commit@v2.7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          push-branch: 'replace-${{ env.BRANCH_VERSION }}'
+          commit-message: 'update replacer branch'
+          force-add: 'true'
+          rebase: 'true'
+          files: package.json prebuilds/
