@@ -77,11 +77,31 @@ This method gives you more control over the usage of `ssb-neon-keys`, as well as
 
 Versions of ssb-keys that are mirrored by ssb-neon-keys currently include (and in the sublist, which platforms are guaranteed to be supported):
 
-- 7.2.0
-  - linux-x64
-    - Electron 7.x
+- 7.2.0 (as of `ssb-neon-keys@7.2.0-17`)
+  - macOS (darwin-x64)
     - Node 10.x
     - Node 12.x
+    - Node 14.x
+    - Electron 7.x
+    - Electron 8.x
+    - Electron 9.x
+    - Electron 10.x
+  - Linux (linux-x64)
+    - Node 10.x
+    - Node 12.x
+    - Node 14.x
+    - Electron 7.x
+    - Electron 8.x
+    - Electron 9.x
+    - Electron 10.x
+  - Windows (win32-x64)
+    - Node 10.x
+    - Node 12.x
+    - Node 14.x
+    - Electron 7.x
+    - Electron 8.x
+    - Electron 9.x
+    - Electron 10.x
 
 ## License
 
