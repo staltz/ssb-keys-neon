@@ -95,7 +95,7 @@ jobs:
 
     strategy:
       matrix:
-        electron-version: [7]
+        electron-version: [7, 8, 9, 10]
         node-version: [12.x]
         os: [ubuntu-latest, macos-latest]
 
