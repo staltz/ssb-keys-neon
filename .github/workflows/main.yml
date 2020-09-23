@@ -203,7 +203,7 @@ jobs:
         run: node .github/set-pkg-replacer-name.js
 
       - name: Detect version to replace
-        run: echo '::set-env name=BRANCH_VERSION::$(node .github/get-pkg-version.js)'
+        run: echo ::set-env name=BRANCH_VERSION::$(node .github/get-pkg-version.js)
 
       - name: Push git branch replace-${{ env.BRANCH_VERSION }}
         uses: github-actions-x/commit@v2.7
