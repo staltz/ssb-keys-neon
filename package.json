@@ -1,5 +1,5 @@
 {
-  "name": "ssb-neon-keys",
+  "name": "ssb-keys",
   "version": "7.2.0-18",
   "description": "Rust-in-Node.js variant of ssb-keys",
   "main": "lib/index.js",
