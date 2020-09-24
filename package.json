@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "neon-cli": "~0.4.2",
-    "neon-load-or-build": "1.0.0",
+    "neon-load-or-build": "1.0.1",
     "run-script-os": "^1.1.1"
   },
   "devDependencies": {
