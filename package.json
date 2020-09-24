@@ -16,8 +16,9 @@
   },
   "devDependencies": {
     "cpy-cli": "^3.1.1",
+    "detect-libc": "~1.0.3",
     "electron-build-env": "^0.2.0",
-    "neon-tag-prebuild": "^1.0.0",
+    "neon-tag-prebuild": "^1.1.0",
     "ssb-keys": "7.2.2",
     "tape": "^5.0.1"
   },
@@ -28,7 +29,7 @@
     "build-debug": "neon build",
     "build-release": "neon build --release",
     "build-release-electron": "electron-build-env neon build --release",
-    "tag-prebuild": "neon-tag-prebuild",
+    "tag-prebuild": "detect-libc neon-tag-prebuild",
     "tag-prebuild-electron": "electron-build-env neon-tag-prebuild",
     "setup-compat-tests": "cpy ./node_modules/ssb-keys/test/* ./test-compat",
     "pretest": "npm run build-debug",
