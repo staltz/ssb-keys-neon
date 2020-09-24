@@ -172,6 +172,7 @@ As of `ssb-neon-keys@7.2.0-17`
   - Electron 10.x
 
 </details>
+
 ## License
 
 AGPL-3.0
