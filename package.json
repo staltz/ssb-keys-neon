@@ -19,7 +19,7 @@
     "electron-build-env": "^0.2.0",
     "neon-tag-prebuild": "^1.0.0",
     "ssb-keys": "7.2.2",
-    "tape": "^3.0.3"
+    "tape": "^5.0.1"
   },
   "scripts": {
     "install": "run-script-os",
