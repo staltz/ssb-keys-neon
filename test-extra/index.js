@@ -1,13 +1,15 @@
 var tape = require('tape');
 var ssbkeys = require('../');
 var fs = require('fs');
-var path = '/tmp/ssb-keys_' + Date.now();
+var os = require('os');
+var path = require('path');
 
 tape('create and load presigil-legacy async', function (t) {
+  var keyPath = path.join(os.tmpdir(), `ssb-keys_${Date.now()}`);
   var keys = ssbkeys.generate('ed25519');
   keys.id = keys.id.substring(1);
-  fs.writeFileSync(path, JSON.stringify(keys));
-  var k2 = ssbkeys.loadSync(path);
+  fs.writeFileSync(keyPath, JSON.stringify(keys));
+  var k2 = ssbkeys.loadSync(keyPath);
   t.equal(k2.id, '@' + keys.id);
   t.end();
 });
@@ -34,12 +36,12 @@ tape('unboxKey & unboxBody', function (t) {
 });
 
 tape('loadOrCreate can load', function (t) {
-  var path = '/tmp/ssb-keys-1-' + Date.now();
+  var keyPath = path.join(os.tmpdir(), `ssb-keys-1-${Date.now()}`);
   var keys = ssbkeys.generate('ed25519');
   keys.id = keys.id.substring(1);
-  fs.writeFileSync(path, JSON.stringify(keys));
+  fs.writeFileSync(keyPath, JSON.stringify(keys));
 
-  ssbkeys.loadOrCreate(path, (err, k2) => {
+  ssbkeys.loadOrCreate(keyPath, (err, k2) => {
     t.error(err);
     t.equal(k2.id, '@' + keys.id);
     t.end();
@@ -47,10 +49,10 @@ tape('loadOrCreate can load', function (t) {
 });
 
 tape('loadOrCreate can create', function (t) {
-  var path = '/tmp/ssb-keys-2-' + Date.now();
-  t.equal(fs.existsSync(path), false);
+  var keyPath = path.join(os.tmpdir(), `ssb-keys-2-${Date.now()}`);
+  t.equal(fs.existsSync(keyPath), false);
 
-  ssbkeys.loadOrCreate(path, (err, keys) => {
+  ssbkeys.loadOrCreate(keyPath, (err, keys) => {
     t.error(err);
     t.true(keys.public.length > 20, 'keys.public is a long string');
     t.true(keys.private.length > 20, 'keys.private is a long string');
@@ -60,23 +62,39 @@ tape('loadOrCreate can create', function (t) {
 });
 
 tape('loadOrCreateSync can load', function (t) {
-  var path = '/tmp/ssb-keys-3-' + Date.now();
+  var keyPath = path.join(os.tmpdir(), `ssb-keys-3-${Date.now()}`);
   var keys = ssbkeys.generate('ed25519');
   keys.id = keys.id.substring(1);
-  fs.writeFileSync(path, JSON.stringify(keys));
+  fs.writeFileSync(keyPath, JSON.stringify(keys));
 
-  var k2 = ssbkeys.loadOrCreateSync(path);
+  var k2 = ssbkeys.loadOrCreateSync(keyPath);
   t.equal(k2.id, '@' + keys.id);
   t.end();
 });
 
 tape('loadOrCreateSync can create', function (t) {
-  var path = '/tmp/ssb-keys-4-' + Date.now();
-  t.equal(fs.existsSync(path), false);
+  var keyPath = path.join(os.tmpdir(), `ssb-keys-4-${Date.now()}`);
+  t.equal(fs.existsSync(keyPath), false);
 
-  var keys = ssbkeys.loadOrCreateSync(path);
+  var keys = ssbkeys.loadOrCreateSync(keyPath);
   t.true(keys.public.length > 20, 'keys.public is a long string');
   t.true(keys.private.length > 20, 'keys.private is a long string');
   t.true(keys.id.length > 20, 'keys.id is a long string');
+  t.end();
+});
+
+tape('ssbSecretKeyToPrivateBoxSecret accepts keys object', function (t) {
+  var keys = ssbkeys.generate();
+  var curve = ssbkeys.ssbSecretKeyToPrivateBoxSecret(keys);
+  t.true(Buffer.isBuffer(curve));
+  t.equals(curve.length, 32);
+  t.end();
+});
+
+tape('ssbSecretKeyToPrivateBoxSecret accepts keys.private', function (t) {
+  var keys = ssbkeys.generate();
+  var curve = ssbkeys.ssbSecretKeyToPrivateBoxSecret(keys.private);
+  t.true(Buffer.isBuffer(curve));
+  t.equals(curve.length, 32);
   t.end();
 });

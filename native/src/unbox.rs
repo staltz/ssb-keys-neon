@@ -2,10 +2,11 @@ use super::utils;
 use neon::prelude::*;
 use neon::result::Throw;
 use private_box;
-use sodiumoxide::crypto::box_::PublicKey as EphPublicKey;
+use sodiumoxide::crypto::box_::{PublicKey as EphPublicKey, SecretKey as EphSecretKey};
 use sodiumoxide::crypto::secretbox;
 use sodiumoxide::crypto::sign::ed25519;
 use ssb_crypto::handshake::derive_shared_secret_sk;
+use std::mem::size_of;
 
 pub fn neon_box(mut cx: FunctionContext) -> JsResult<JsString> {
   let msg = {
@@ -270,4 +271,60 @@ pub fn neon_unbox_body(mut cx: FunctionContext) -> JsResult<JsValue> {
   let out = out.unwrap();
 
   Ok(out.upcast())
+}
+
+// FIXME: this is from ssb-crypto, but it's private. Should make it public?
+fn sk_to_curve(k: &ed25519::SecretKey) -> Option<EphSecretKey> {
+  let mut buf = [0; size_of::<EphSecretKey>()];
+
+  let ok = unsafe {
+    libsodium_sys::crypto_sign_ed25519_sk_to_curve25519(buf.as_mut_ptr(), k.0.as_ptr()) == 0
+  };
+
+  if ok {
+    EphSecretKey::from_slice(&buf)
+  } else {
+    None
+  }
+}
+
+// ssbSecretKeyToPrivateBoxSecret
+pub fn neon_sk_to_curve(mut cx: FunctionContext) -> JsResult<JsValue> {
+  let private_key = {
+    let private_str = cx
+      .argument::<JsValue>(0)
+      .and_then(|v| {
+        if v.is_a::<JsString>() {
+          v.downcast::<JsString>().or_throw(&mut cx)
+        } else if v.is_a::<JsObject>() {
+          v.downcast::<JsObject>()
+            .or_throw(&mut cx)?
+            .get(&mut cx, "private")?
+            .downcast::<JsString>()
+            .or_throw(&mut cx)
+        } else {
+          cx.throw_error("expected 1st argument to be the keys object or the private key string")
+        }
+      })?
+      .value();
+    let vec = utils::decode_key(private_str)
+      .or_else(|_| cx.throw_error("cannot base64 decode the private key given to `signObj`"))?;
+    ed25519::SecretKey::from_slice(&vec)
+      .ok_or(0)
+      .or_else(|_| cx.throw_error("cannot decode private key bytes"))?
+  };
+
+  let curve = sk_to_curve(&private_key);
+  if curve.is_none() {
+    return cx.throw_error("failed to run ssbSecretKeyToPrivateBoxSecret");
+  }
+  let EphSecretKey(array) = curve.unwrap();
+
+  let buffer = cx
+    .compute_scoped(|mut cx2| utils::bytes_to_buffer(&mut cx2, &array))
+    .or_else(|_| {
+      cx.throw_error("failed to create JsBuffer for `ssbSecretKeyToPrivateBoxSecret`")
+    })?;
+
+  Ok(buffer.upcast())
 }

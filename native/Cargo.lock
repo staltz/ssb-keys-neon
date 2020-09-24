@@ -103,37 +103,37 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "neon"
-version = "0.4.1"
+version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "cslice 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "neon-build 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "neon-runtime 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "neon-build 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "neon-runtime 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "semver 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "winapi 0.3.9 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "neon-build"
-version = "0.4.1"
+version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "cfg-if 0.1.10 (registry+https://github.com/rust-lang/crates.io-index)",
- "neon-sys 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "neon-sys 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "neon-runtime"
-version = "0.4.1"
+version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "cfg-if 0.1.10 (registry+https://github.com/rust-lang/crates.io-index)",
- "neon-sys 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "neon-sys 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "neon-sys"
-version = "0.4.1"
+version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "cc 1.0.50 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -295,8 +295,9 @@ name = "ssb-keys-rs"
 version = "7.2.0"
 dependencies = [
  "base64 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "neon 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "neon-build 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libsodium-sys 0.2.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "neon 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "neon-build 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "private-box 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "sodiumoxide 0.2.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "ssb-crypto 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -400,10 +401,10 @@ dependencies = [
 "checksum libflate 0.1.27 (registry+https://github.com/rust-lang/crates.io-index)" = "d9135df43b1f5d0e333385cb6e7897ecd1a43d7d11b91ac003f4d2c2d2401fdd"
 "checksum libsodium-sys 0.2.5 (registry+https://github.com/rust-lang/crates.io-index)" = "1c344ff12b90ef8fa1f0fffacd348c1fd041db331841fec9eab23fdb991f5e73"
 "checksum memchr 2.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "3197e20c7edb283f87c071ddfc7a2cca8f8e0b888c242959846a6fce03c72223"
-"checksum neon 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)" = "e1fba6a65bbcb66603e0fb94962de14c090e0e04027126670f1b16e20844a0ab"
-"checksum neon-build 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)" = "8efc8ef1601eefde260e25062e86036c3b352d41dd9c9c8c1d4f7c0234253679"
-"checksum neon-runtime 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)" = "f8e9f587d3edcc25aca5fc8741dc1fde48759f9f5ec2b7606977d38ea7a5d23e"
-"checksum neon-sys 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)" = "2ff62dd97b553915aa97608c5a430f5c7902313cbc1d22e6c89fcd5c341f9bdd"
+"checksum neon 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)" = "c1329a928dbbe3567463cb1a0fd91aacd80a405cff7fc263face08fe84d6d624"
+"checksum neon-build 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)" = "d87d486730722e8b35abdecd5b0c18caef39af2447f5685f53d17012541fe471"
+"checksum neon-runtime 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)" = "8af12f21cf0f36c0821ba4a1914b3002e81737f41bd5326cd6776b409b2cde94"
+"checksum neon-sys 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)" = "1c96a52171c74ad7a00472c0fe9420620f618c72866ab5b549596895a59129ed"
 "checksum pkg-config 0.3.17 (registry+https://github.com/rust-lang/crates.io-index)" = "05da548ad6865900e60eaba7f589cc0783590a92e940c26953ff81ddbab2d677"
 "checksum private-box 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)" = "5f265d76fccc935bbb73b9c801e07930f82b42c5de70f2083c98708f56966563"
 "checksum proc-macro2 1.0.8 (registry+https://github.com/rust-lang/crates.io-index)" = "3acb317c6ff86a4e579dfa00fc5e6cca91ecbb4e7eb2df0468805b674eb88548"
