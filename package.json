@@ -10,7 +10,7 @@
     "url": "git+https://github.com/staltz/ssb-neon-keys.git"
   },
   "dependencies": {
-    "neon-cli": "~0.4.1",
+    "neon-cli": "~0.4.2",
     "neon-load-or-build": "1.0.0"
   },
   "devDependencies": {
