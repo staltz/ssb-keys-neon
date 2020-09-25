@@ -15,9 +15,7 @@ neon-build = "0.4.2"
 
 [dependencies]
 neon = "0.4.2"
-ssb-keyfile = { git = "https://github.com/staltz/ssb-keyfile-rs", branch = "use-multiformats-fork" }
-ssb-crypto = "~0.1.4"
-private-box = "~0.5.0"
+ssb-keyfile = "0.4.0"
+ssb-crypto = "0.2.1"
+private-box = "0.6.0"
 base64 = "0.11.0"
-sodiumoxide = "~0.2.5"
-libsodium-sys = "~0.2.5"

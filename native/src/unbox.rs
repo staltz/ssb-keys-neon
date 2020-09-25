@@ -1,12 +1,10 @@
-use super::utils;
+use super::utils::{self, OptionExt};
 use neon::prelude::*;
 use neon::result::Throw;
 use private_box;
-use sodiumoxide::crypto::box_::{PublicKey as EphPublicKey, SecretKey as EphSecretKey};
-use sodiumoxide::crypto::secretbox;
-use sodiumoxide::crypto::sign::ed25519;
-use ssb_crypto::handshake::derive_shared_secret_sk;
-use std::mem::size_of;
+
+use ssb_crypto::ephemeral::sk_to_curve;
+use ssb_crypto::{Keypair, PublicKey};
 
 pub fn neon_box(mut cx: FunctionContext) -> JsResult<JsString> {
   let msg = {
@@ -18,7 +16,7 @@ pub fn neon_box(mut cx: FunctionContext) -> JsResult<JsString> {
     stringified.into_bytes()
   };
 
-  let recps: Vec<ed25519::PublicKey> = cx
+  let recps: Vec<PublicKey> = cx
     .argument::<JsValue>(1)
     .and_then(|v| {
       if v.is_a::<JsArray>() {
@@ -29,7 +27,7 @@ pub fn neon_box(mut cx: FunctionContext) -> JsResult<JsString> {
     })?
     .iter()
     .flat_map(|recp| {
-      let public_key: Result<ed25519::PublicKey, Throw> = {
+      let public_key: Result<PublicKey, Throw> = {
         let public_str = if recp.is_a::<JsObject>() {
           recp
             .downcast::<JsObject>()
@@ -41,12 +39,7 @@ pub fn neon_box(mut cx: FunctionContext) -> JsResult<JsString> {
         } else {
           recp.downcast::<JsString>().or_throw(&mut cx)?.value()
         };
-        let vec = utils::decode_key(public_str)
-          .or_else(|_| cx.throw_error("cannot base64 decode the public key"))?;
-        let key = ed25519::PublicKey::from_slice(&vec)
-          .ok_or(0)
-          .or_else(|_| cx.throw_error("cannot decode public key bytes"))?;
-        Ok(key)
+        PublicKey::from_base64(&public_str).or_throw(&mut cx, "cannot base64 decode the public key")
       };
       public_key
     })
@@ -71,12 +64,7 @@ pub fn neon_unbox(mut cx: FunctionContext) -> JsResult<JsValue> {
         }
       })?
       .value();
-    let ctxt_str = if ctxt_str.ends_with(".box") {
-      String::from(ctxt_str.trim_end_matches(".box"))
-    } else {
-      ctxt_str
-    };
-    base64::decode_config(&ctxt_str, base64::STANDARD)
+    base64::decode_config(ctxt_str.trim_end_matches(".box"), base64::STANDARD)
   };
   if cyphertext.is_err() {
     return Ok(cx.undefined().upcast());
@@ -100,11 +88,10 @@ pub fn neon_unbox(mut cx: FunctionContext) -> JsResult<JsValue> {
         }
       })?
       .value();
-    let vec = utils::decode_key(private_str)
-      .or_else(|_| cx.throw_error("cannot base64 decode the private key given to `signObj`"))?;
-    ed25519::SecretKey::from_slice(&vec)
-      .ok_or(0)
-      .or_else(|_| cx.throw_error("cannot decode private key bytes"))?
+    Keypair::from_base64(&private_str).or_throw(
+      &mut cx,
+      "cannot base64 decode the private key given to `signObj`",
+    )?
   };
 
   let msg = private_box::decrypt(cyphertext.as_slice(), &private_key).ok_or(0);
@@ -130,32 +117,6 @@ pub fn neon_unbox(mut cx: FunctionContext) -> JsResult<JsValue> {
   Ok(out.upcast())
 }
 
-const BOXED_KEY_SIZE_BYTES: usize = 32 + 1 + 16;
-
-// FIXME: move this to private-box-rs so that it's public and `decrypt` is
-// split into unboxKey + unboxBody
-fn multibox_open_key(cyphertext: &[u8], secret_key: &ed25519::SecretKey) -> Option<Vec<u8>> {
-  let nonce = secretbox::Nonce::from_slice(&cyphertext[0..24])?;
-  let eph_pk = EphPublicKey::from_slice(&cyphertext[24..56])?;
-  let secret = derive_shared_secret_sk(secret_key, &eph_pk)?;
-  let kkey = secretbox::Key::from_slice(&secret[..])?;
-  let key_with_prefix = cyphertext[56..]
-    .chunks_exact(BOXED_KEY_SIZE_BYTES)
-    .find_map(|buf| secretbox::open(&buf, &nonce, &kkey).ok());
-  key_with_prefix
-}
-
-// FIXME: move this to private-box-rs so that it's public
-fn multibox_open_body(cyphertext: &[u8], key_with_prefix: &[u8]) -> Option<Vec<u8>> {
-  let nonce = secretbox::Nonce::from_slice(&cyphertext[0..24])?;
-
-  let num_recps = key_with_prefix[0] as usize;
-  let key = secretbox::Key::from_slice(&key_with_prefix[1..])?;
-
-  let boxed_msg = &cyphertext[(56 + BOXED_KEY_SIZE_BYTES * num_recps)..];
-  secretbox::open(&boxed_msg, &nonce, &key).ok()
-}
-
 pub fn neon_unbox_key(mut cx: FunctionContext) -> JsResult<JsValue> {
   let cyphertext = {
     let ctxt_str = cx
@@ -168,19 +129,14 @@ pub fn neon_unbox_key(mut cx: FunctionContext) -> JsResult<JsValue> {
         }
       })?
       .value();
-    let ctxt_str = if ctxt_str.ends_with(".box") {
-      String::from(ctxt_str.trim_end_matches(".box"))
-    } else {
-      ctxt_str
-    };
-    base64::decode_config(&ctxt_str, base64::STANDARD)
+    base64::decode_config(ctxt_str.trim_end_matches(".box"), base64::STANDARD)
   };
   if cyphertext.is_err() {
     return Ok(cx.undefined().upcast());
   }
   let cyphertext = cyphertext.unwrap();
 
-  let private_key = {
+  let keypair = {
     let private_str = cx
       .argument::<JsValue>(1)
       .and_then(|v| {
@@ -197,26 +153,26 @@ pub fn neon_unbox_key(mut cx: FunctionContext) -> JsResult<JsValue> {
         }
       })?
       .value();
-    let vec = utils::decode_key(private_str)
-      .or_else(|_| cx.throw_error("cannot base64 decode the private key given to `signObj`"))?;
-    ed25519::SecretKey::from_slice(&vec)
-      .ok_or(0)
-      .or_else(|_| cx.throw_error("cannot decode private key bytes"))?
+
+    Keypair::from_base64(&private_str).or_throw(
+      &mut cx,
+      "cannot base64 decode the private key given to `signObj`",
+    )?
   };
 
-  let opened_key = multibox_open_key(&cyphertext, &private_key);
-
+  let opened_key = private_box::decrypt_key(&cyphertext, &keypair);
   if opened_key.is_none() {
     return Ok(cx.undefined().upcast());
   }
 
   let buffer = cx
-    .compute_scoped(|mut cx2| utils::bytes_to_buffer(&mut cx2, opened_key.unwrap().as_slice()))
+    .compute_scoped(|mut cx2| utils::bytes_to_buffer(&mut cx2, &opened_key.unwrap().as_array()))
     .or_else(|_| cx.throw_error("failed to create JsBuffer for `unboxKey`"))?;
 
   Ok(buffer.upcast())
 }
 
+// TODO should also allow JsBuffer ciphertext
 pub fn neon_unbox_body(mut cx: FunctionContext) -> JsResult<JsValue> {
   let cyphertext = {
     let ctxt_str = cx
@@ -250,7 +206,7 @@ pub fn neon_unbox_body(mut cx: FunctionContext) -> JsResult<JsValue> {
   })?;
   let opened_key = cx.borrow(&opened_key_buf, |data| data.as_slice::<u8>());
 
-  let msg = multibox_open_body(&cyphertext, &opened_key);
+  let msg = private_box::decrypt_body_with_key_bytes(&cyphertext, &opened_key);
 
   if msg.is_none() {
     return Ok(cx.undefined().upcast());
@@ -273,24 +229,9 @@ pub fn neon_unbox_body(mut cx: FunctionContext) -> JsResult<JsValue> {
   Ok(out.upcast())
 }
 
-// FIXME: this is from ssb-crypto, but it's private. Should make it public?
-fn sk_to_curve(k: &ed25519::SecretKey) -> Option<EphSecretKey> {
-  let mut buf = [0; size_of::<EphSecretKey>()];
-
-  let ok = unsafe {
-    libsodium_sys::crypto_sign_ed25519_sk_to_curve25519(buf.as_mut_ptr(), k.0.as_ptr()) == 0
-  };
-
-  if ok {
-    EphSecretKey::from_slice(&buf)
-  } else {
-    None
-  }
-}
-
 // ssbSecretKeyToPrivateBoxSecret
 pub fn neon_sk_to_curve(mut cx: FunctionContext) -> JsResult<JsValue> {
-  let private_key = {
+  let keypair = {
     let private_str = cx
       .argument::<JsValue>(0)
       .and_then(|v| {
@@ -307,21 +248,19 @@ pub fn neon_sk_to_curve(mut cx: FunctionContext) -> JsResult<JsValue> {
         }
       })?
       .value();
-    let vec = utils::decode_key(private_str)
-      .or_else(|_| cx.throw_error("cannot base64 decode the private key given to `signObj`"))?;
-    ed25519::SecretKey::from_slice(&vec)
-      .ok_or(0)
-      .or_else(|_| cx.throw_error("cannot decode private key bytes"))?
+    Keypair::from_base64(&private_str).or_throw(
+      &mut cx,
+      "cannot base64 decode the private key given to `signObj`",
+    )?
   };
 
-  let curve = sk_to_curve(&private_key);
+  let curve = sk_to_curve(&keypair.secret);
   if curve.is_none() {
     return cx.throw_error("failed to run ssbSecretKeyToPrivateBoxSecret");
   }
-  let EphSecretKey(array) = curve.unwrap();
 
   let buffer = cx
-    .compute_scoped(|mut cx2| utils::bytes_to_buffer(&mut cx2, &array))
+    .compute_scoped(|mut cx2| utils::bytes_to_buffer(&mut cx2, &curve.unwrap().0))
     .or_else(|_| {
       cx.throw_error("failed to create JsBuffer for `ssbSecretKeyToPrivateBoxSecret`")
     })?;

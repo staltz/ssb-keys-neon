@@ -1,6 +1,6 @@
-use super::utils;
+use super::utils::{self, StringExt};
 use neon::prelude::*;
-use sodiumoxide::crypto::hash::sha256;
+use ssb_crypto::hash;
 
 pub fn neon_hash(mut cx: FunctionContext) -> JsResult<JsString> {
   let args_length = cx.len();
@@ -38,10 +38,5 @@ pub fn neon_hash(mut cx: FunctionContext) -> JsResult<JsString> {
   }?;
   let data_bytes = cx.borrow(&data_buffer, |bytes| bytes.as_slice::<u8>());
 
-  let hashed = sha256::hash(data_bytes);
-
-  let mut out = base64::encode_config(&hashed, base64::STANDARD);
-  out.push_str(".sha256");
-
-  Ok(cx.string(out))
+  Ok(cx.string(hash(data_bytes).as_base64().with_suffix(".sha256")))
 }

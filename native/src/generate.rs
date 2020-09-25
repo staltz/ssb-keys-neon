@@ -1,13 +1,12 @@
-use super::utils::make_keys_obj;
+use super::utils::{make_keys_obj, OptionExt};
 use neon::prelude::*;
-use sodiumoxide::crypto::sign::ed25519;
-use sodiumoxide::crypto::sign::Seed;
+use ssb_crypto::Keypair;
 
 pub fn neon_generate(mut cx: FunctionContext) -> JsResult<JsObject> {
   let args_length = cx.len();
   if args_length == 0 {
-    let (pk, sk) = ed25519::gen_keypair();
-    return cx.compute_scoped(|mut cx2| make_keys_obj(&mut cx2, &pk, &sk));
+    let keypair = Keypair::generate();
+    return cx.compute_scoped(|mut cx2| make_keys_obj(&mut cx2, &keypair));
   }
 
   // First argument: curve (default = "ed25519")
@@ -42,14 +41,13 @@ pub fn neon_generate(mut cx: FunctionContext) -> JsResult<JsObject> {
     .or_else(|_| cx.throw_error("failed to understand `seed` argument"))?;
 
   // Use seed if given, else, generate from random
-  let (pk, sk) = match maybe_seed {
-    Some(seed_buffer) => cx.borrow(&seed_buffer, |data| {
-      let seed_bytes = data.as_slice::<u8>();
-      let seed = Seed::from_slice(seed_bytes).unwrap();
-      ed25519::keypair_from_seed(&seed)
-    }),
-    None => ed25519::gen_keypair(),
-  };
+  let keypair = match maybe_seed {
+    Some(seed_buffer) => {
+      let seed_bytes = cx.borrow(&seed_buffer, |data| data.as_slice::<u8>());
+      Keypair::from_seed(&seed_bytes).or_throw(&mut cx, "seed buffer must be 32 bytes")
+    }
+    None => Ok(Keypair::generate()),
+  }?;
 
-  cx.compute_scoped(|mut cx2| make_keys_obj(&mut cx2, &pk, &sk))
+  cx.compute_scoped(|mut cx2| make_keys_obj(&mut cx2, &keypair))
 }
