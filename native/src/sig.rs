@@ -1,7 +1,8 @@
-use super::utils;
+use super::utils::{self, OptionExt, StringExt};
 use neon::prelude::*;
-use sodiumoxide::crypto::auth;
-use sodiumoxide::crypto::sign::ed25519;
+
+// TODO NetworkKey isn't a great name, I guess
+use ssb_crypto::{Keypair, NetworkKey as AuthKey, PublicKey, Signature};
 
 // sign: (keys: obj | string, hmac_key?: string, o: obj) => string
 pub fn neon_sign_obj(mut cx: FunctionContext) -> JsResult<JsObject> {
@@ -11,7 +12,7 @@ pub fn neon_sign_obj(mut cx: FunctionContext) -> JsResult<JsObject> {
     return cx.throw_error("signObj requires at least two arguments: (keys, msg)");
   }
 
-  let private_key = {
+  let keypair = {
     let private_str = cx
       .argument::<JsValue>(0)
       .and_then(|v| {
@@ -29,15 +30,14 @@ pub fn neon_sign_obj(mut cx: FunctionContext) -> JsResult<JsObject> {
       })?
       .value();
     // println!("private_str {}", private_str);
-    let vec = utils::decode_key(private_str)
-      .or_else(|_| cx.throw_error("cannot base64 decode the private key given to `signObj`"))?;
-    ed25519::SecretKey::from_slice(&vec)
-      .ok_or(0)
-      .or_else(|_| cx.throw_error("cannot decode private key bytes"))?
+    Keypair::from_base64(&private_str).ok_or_else(|| {
+      cx.throw_error::<_, Keypair>("cannot decode private key bytes")
+        .unwrap_err()
+    })?
   };
 
   // TODO this is exactly the same inside neon_verify_obj, maybe could refactor
-  let hmac_key: Option<[u8; 32]> = {
+  let hmac_key = {
     if args_length == 3 {
       let array = cx.argument::<JsValue>(1).and_then(|v| {
         if v.is_a::<JsBuffer>() {
@@ -47,24 +47,15 @@ pub fn neon_sign_obj(mut cx: FunctionContext) -> JsResult<JsObject> {
             return cx.throw_error("expected 2nd argument to be a 32-bytes Buffer");
           }
           let bytes = cx.borrow(&buf, |data| data.as_slice::<u8>());
-          let mut array = [0; 32];
-          array.copy_from_slice(bytes);
-          Ok(array)
+          AuthKey::from_slice(bytes).or_throw(&mut cx, "hmac_key buffer must be 32 bytes")
         } else if v.is_a::<JsString>() {
-          let vec = v
-            .downcast::<JsString>()
+          v.downcast::<JsString>()
             .or_throw(&mut cx)
             .map(|s| s.value())
             .and_then(|s| {
-              utils::decode_key(s)
-                .or_else(|_| cx.throw_error("expected 2nd argument to be a base64 string"))
-            })?;
-          if vec.len() != 32 {
-            return cx.throw_error("expected 2nd argument to be a 32-bytes base64 string");
-          }
-          let mut array = [0; 32];
-          array.copy_from_slice(&vec);
-          Ok(array)
+              AuthKey::from_base64(&s)
+                .or_throw(&mut cx, "expected 2nd argument to be a base64 string")
+            })
         } else {
           cx.throw_error("expected 2nd argument to be a Buffer for the hmac_key")
         }
@@ -109,21 +100,14 @@ pub fn neon_sign_obj(mut cx: FunctionContext) -> JsResult<JsObject> {
   };
 
   // TODO this is exactly the same inside neon_verify_obj, maybe could refactor
-  let msg = match hmac_key {
-    None => msg,
-    Some(hmac_bytes) => {
-      let key = auth::Key(hmac_bytes);
-      let auth::Tag(tag) = auth::authenticate(msg.as_slice(), &key);
-      tag.to_vec()
+  let sig = match hmac_key {
+    None => keypair.sign(msg.as_slice()),
+    Some(hmac_key) => {
+      let tag = hmac_key.authenticate(msg.as_slice());
+      keypair.sign(&tag.0)
     }
   };
-
-  let signature = {
-    let ed25519::Signature(sig) = ed25519::sign_detached(msg.as_slice(), &private_key);
-    let sig_in_b64 = utils::sig_encode_key(&sig);
-    // println!("sig: {}", signature_string);
-    cx.string(sig_in_b64)
-  };
+  let signature = cx.string(sig.as_base64().with_suffix(".sig.ed25519"));
 
   out_obj
     .set(&mut cx, "signature", signature)
@@ -161,14 +145,12 @@ pub fn neon_verify_obj(mut cx: FunctionContext) -> JsResult<JsBoolean> {
       .or_else(|_| cx.throw_error("failed to understand `private` argument"))?
       .value();
     // println!("public_str {}", public_str);
-    let vec = utils::decode_key(public_str)
-      .or_else(|_| cx.throw_error("cannot base64 decode the public key"))?;
-    ed25519::PublicKey::from_slice(&vec)
-      .ok_or(0)
-      .or_else(|_| cx.throw_error("cannot decode public key bytes"))?
+
+    PublicKey::from_base64(&public_str).or_throw(&mut cx, "cannot base64 decode the public key")?
   };
 
-  let hmac_key: Option<[u8; 32]> = {
+  // TODO this is exactly the same inside neon_verify_obj, maybe could refactor
+  let hmac_key = {
     if args_length == 3 {
       let array = cx.argument::<JsValue>(1).and_then(|v| {
         if v.is_a::<JsBuffer>() {
@@ -178,24 +160,15 @@ pub fn neon_verify_obj(mut cx: FunctionContext) -> JsResult<JsBoolean> {
             return cx.throw_error("expected 2nd argument to be a 32-bytes Buffer");
           }
           let bytes = cx.borrow(&buf, |data| data.as_slice::<u8>());
-          let mut array = [0; 32];
-          array.copy_from_slice(bytes);
-          Ok(array)
+          AuthKey::from_slice(bytes).or_throw(&mut cx, "hmac_key buffer must be 32 bytes")
         } else if v.is_a::<JsString>() {
-          let vec = v
-            .downcast::<JsString>()
+          v.downcast::<JsString>()
             .or_throw(&mut cx)
             .map(|s| s.value())
             .and_then(|s| {
-              utils::decode_key(s)
-                .or_else(|_| cx.throw_error("expected 2nd argument to be a base64 string"))
-            })?;
-          if vec.len() != 32 {
-            return cx.throw_error("expected 2nd argument to be a 32-bytes base64 string");
-          }
-          let mut array = [0; 32];
-          array.copy_from_slice(&vec);
-          Ok(array)
+              AuthKey::from_base64(&s)
+                .or_throw(&mut cx, "expected 2nd argument to be a base64 string")
+            })
         } else {
           cx.throw_error("expected 2nd argument to be a Buffer for the hmac_key")
         }
@@ -232,11 +205,7 @@ pub fn neon_verify_obj(mut cx: FunctionContext) -> JsResult<JsBoolean> {
       .or_throw(&mut cx)
       .or_else(|_| cx.throw_error("obj.signature field is corrupted or not a string"))?
       .value();
-    let vec = utils::sig_decode_key(sig)
-      .or_else(|_| cx.throw_error("unable to decode signature base64 string"))?;
-    ed25519::Signature::from_slice(&vec)
-      .ok_or(0)
-      .or_else(|_| cx.throw_error("cannot decode signature bytes"))?
+    Signature::from_base64(&sig).or_throw(&mut cx, "unable to decode signature base64 string")?
   };
 
   let msg = {
@@ -258,15 +227,13 @@ pub fn neon_verify_obj(mut cx: FunctionContext) -> JsResult<JsBoolean> {
     stringified.into_bytes()
   };
 
-  let msg = match hmac_key {
-    None => msg,
-    Some(hmac_bytes) => {
-      let key = auth::Key(hmac_bytes);
-      let auth::Tag(tag) = auth::authenticate(msg.as_slice(), &key);
-      tag.to_vec()
+  let passed = match hmac_key {
+    None => public_key.verify(&signature, msg.as_slice()),
+    Some(hmac_key) => {
+      let tag = hmac_key.authenticate(msg.as_slice());
+      public_key.verify(&signature, &tag.0)
     }
   };
 
-  let passed = ed25519::verify_detached(&signature, msg.as_slice(), &public_key);
   Ok(cx.boolean(passed))
 }

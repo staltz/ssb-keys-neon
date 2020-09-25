@@ -1,15 +1,15 @@
 use super::utils::make_keys_obj;
 use neon::prelude::*;
-use sodiumoxide::crypto::sign::ed25519;
-use sodiumoxide::crypto::sign::ed25519::{PublicKey, SecretKey};
-use ssb_keyfile::Error as SSBError;
-use std::fs;
-use std::fs::File;
+
+use ssb_crypto::Keypair;
+use ssb_keyfile::KeyFileError as SSBError;
+
+use std::fs::{self, File};
 use std::io::prelude::*;
 use std::io::{Error, ErrorKind};
 use std::path::Path;
 
-fn internal_create(path: &String) -> Result<(PublicKey, SecretKey), Error> {
+fn internal_create(path: &String) -> Result<Keypair, Error> {
   // TODO this path handling should be in ssb-keyfile
   let path = Path::new(path).to_path_buf();
   let _ = fs::create_dir_all(&path);
@@ -27,18 +27,17 @@ fn internal_create(path: &String) -> Result<(PublicKey, SecretKey), Error> {
 
   // TODO these three steps should be in ssb-keyfile
   // Generate
-  let (pk, sk) = ed25519::gen_keypair();
+  let keypair = Keypair::generate();
 
   // Render the file contents as a string
-  let file_contents = ssb_keyfile::new_keyfile_string(&pk, &sk);
+  let file_contents = ssb_keyfile::new_keyfile_string(&keypair);
 
   // Write the file
-  File::create(&path)
-    .and_then(|mut file| file.write_all(file_contents.as_bytes()))
-    .map(|_| (pk, sk))
+  File::create(&path).and_then(|mut file| file.write_all(file_contents.as_bytes()))?;
+  Ok(keypair)
 }
 
-fn internal_load(path: &String) -> Result<(PublicKey, SecretKey), SSBError> {
+fn internal_load(path: &String) -> Result<Keypair, SSBError> {
   // TODO this path handling should be in ssb-keyfile
   let path = Path::new(path).to_path_buf();
   let _ = fs::create_dir_all(&path);
@@ -48,7 +47,7 @@ fn internal_load(path: &String) -> Result<(PublicKey, SecretKey), SSBError> {
     path
   };
 
-  ssb_keyfile::load_keys_from_path(&path).map(|(a, b, _)| (a, b))
+  ssb_keyfile::load_keys_from_path(&path)
 }
 
 struct CreateTask {
@@ -56,22 +55,18 @@ struct CreateTask {
 }
 
 impl Task for CreateTask {
-  type Output = (PublicKey, SecretKey);
+  type Output = Keypair;
   type Error = Error;
   type JsEvent = JsObject;
 
-  fn perform(&self) -> Result<(PublicKey, SecretKey), Error> {
+  fn perform(&self) -> Result<Keypair, Error> {
     internal_create(&self.argument)
   }
 
-  fn complete(
-    self,
-    mut cx: TaskContext,
-    result: Result<(PublicKey, SecretKey), Error>,
-  ) -> JsResult<JsObject> {
-    let (pk, sk) = result.or_else(|e| cx.throw_error(e.to_string()))?;
+  fn complete(self, mut cx: TaskContext, result: Result<Keypair, Error>) -> JsResult<JsObject> {
+    let keypair = result.or_else(|e| cx.throw_error(e.to_string()))?;
 
-    cx.compute_scoped(|mut cx2| make_keys_obj(&mut cx2, &pk, &sk))
+    cx.compute_scoped(|mut cx2| make_keys_obj(&mut cx2, &keypair))
   }
 }
 
@@ -80,22 +75,18 @@ struct LoadTask {
 }
 
 impl Task for LoadTask {
-  type Output = (PublicKey, SecretKey);
+  type Output = Keypair;
   type Error = SSBError;
   type JsEvent = JsObject;
 
-  fn perform(&self) -> Result<(PublicKey, SecretKey), SSBError> {
+  fn perform(&self) -> Result<Keypair, SSBError> {
     internal_load(&self.argument)
   }
 
-  fn complete(
-    self,
-    mut cx: TaskContext,
-    result: Result<(PublicKey, SecretKey), SSBError>,
-  ) -> JsResult<JsObject> {
-    let (pk, sk) = result.or_else(|e| cx.throw_error(e.to_string()))?;
+  fn complete(self, mut cx: TaskContext, result: Result<Keypair, SSBError>) -> JsResult<JsObject> {
+    let keypair = result.or_else(|e| cx.throw_error(e.to_string()))?;
 
-    cx.compute_scoped(|mut cx2| make_keys_obj(&mut cx2, &pk, &sk))
+    cx.compute_scoped(|mut cx2| make_keys_obj(&mut cx2, &keypair))
   }
 }
 
@@ -104,22 +95,18 @@ struct LoadOrCreateTask {
 }
 
 impl Task for LoadOrCreateTask {
-  type Output = (PublicKey, SecretKey);
+  type Output = Keypair;
   type Error = Error;
   type JsEvent = JsObject;
 
-  fn perform(&self) -> Result<(PublicKey, SecretKey), Error> {
+  fn perform(&self) -> Result<Keypair, Error> {
     internal_load(&self.argument).or_else(|_| internal_create(&self.argument))
   }
 
-  fn complete(
-    self,
-    mut cx: TaskContext,
-    result: Result<(PublicKey, SecretKey), Error>,
-  ) -> JsResult<JsObject> {
-    let (pk, sk) = result.or_else(|e| cx.throw_error(e.to_string()))?;
+  fn complete(self, mut cx: TaskContext, result: Result<Keypair, Error>) -> JsResult<JsObject> {
+    let keypair = result.or_else(|e| cx.throw_error(e.to_string()))?;
 
-    cx.compute_scoped(|mut cx2| make_keys_obj(&mut cx2, &pk, &sk))
+    cx.compute_scoped(|mut cx2| make_keys_obj(&mut cx2, &keypair))
   }
 }
 
@@ -167,9 +154,9 @@ pub fn neon_create_sync(mut cx: FunctionContext) -> JsResult<JsObject> {
     .or_else(|_| cx.throw_error("failed to understand the `path` argument"))?
     .value();
 
-  let (pk, sk) = internal_create(&path).or_else(|e| cx.throw_error(e.to_string()))?;
+  let keypair = internal_create(&path).or_else(|e| cx.throw_error(e.to_string()))?;
 
-  cx.compute_scoped(|mut cx2| make_keys_obj(&mut cx2, &pk, &sk))
+  cx.compute_scoped(|mut cx2| make_keys_obj(&mut cx2, &keypair))
 }
 
 pub fn neon_load(mut cx: FunctionContext) -> JsResult<JsUndefined> {
@@ -214,9 +201,9 @@ pub fn neon_load_sync(mut cx: FunctionContext) -> JsResult<JsObject> {
     .or_else(|_| cx.throw_error("failed to understand the `path` argument"))?
     .value();
 
-  let (pk, sk) = internal_load(&path).or_else(|e| cx.throw_error(e.to_string()))?;
+  let keypair = internal_load(&path).or_else(|e| cx.throw_error(e.to_string()))?;
 
-  cx.compute_scoped(|mut cx2| make_keys_obj(&mut cx2, &pk, &sk))
+  cx.compute_scoped(|mut cx2| make_keys_obj(&mut cx2, &keypair))
 }
 
 pub fn neon_load_or_create(mut cx: FunctionContext) -> JsResult<JsUndefined> {
@@ -261,9 +248,9 @@ pub fn neon_load_or_create_sync(mut cx: FunctionContext) -> JsResult<JsObject> {
     .or_else(|_| cx.throw_error("failed to understand the `path` argument"))?
     .value();
 
-  let (pk, sk) = internal_load(&path)
+  let keypair = internal_load(&path)
     .or_else(|_| internal_create(&path))
     .or_else(|e| cx.throw_error(e.to_string()))?;
 
-  cx.compute_scoped(|mut cx2| make_keys_obj(&mut cx2, &pk, &sk))
+  cx.compute_scoped(|mut cx2| make_keys_obj(&mut cx2, &keypair))
 }

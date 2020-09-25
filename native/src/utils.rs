@@ -1,66 +1,18 @@
 extern crate neon;
 
 use neon::prelude::*;
-use sodiumoxide::crypto::sign::ed25519::{PublicKey, SecretKey};
-
-// TODO this should probably be public in ssb-keyfile
-pub fn encode_key(bytes: &[u8]) -> String {
-  let mut out = base64::encode_config(bytes, base64::STANDARD);
-  out.push_str(".ed25519");
-  out
-}
-
-// TODO this should probably be public in ssb-keyfile
-pub fn decode_key(s: String) -> Result<Vec<u8>, base64::DecodeError> {
-  let s = if s.starts_with("@") {
-    String::from(s.trim_start_matches("@"))
-  } else {
-    s
-  };
-  let s = if s.ends_with(".ed25519") {
-    String::from(s.trim_end_matches(".ed25519"))
-  } else {
-    s
-  };
-  base64::decode_config(&s, base64::STANDARD)
-}
-
-// TODO this should probably be public in ssb-keyfile
-pub fn sig_encode_key(bytes: &[u8]) -> String {
-  let mut out = base64::encode_config(bytes, base64::STANDARD);
-  out.push_str(".sig.ed25519");
-  out
-}
-
-// TODO this should probably be public in ssb-keyfile
-pub fn sig_decode_key(s: String) -> Result<Vec<u8>, base64::DecodeError> {
-  let s = if s.starts_with("@") {
-    String::from(s.trim_start_matches("@"))
-  } else {
-    s
-  };
-  let s = if s.ends_with(".sig.ed25519") {
-    String::from(s.trim_end_matches(".sig.ed25519"))
-  } else {
-    s
-  };
-  base64::decode_config(&s, base64::STANDARD)
-}
+use ssb_crypto::Keypair;
+use std::fmt::Debug;
 
 pub fn make_keys_obj<'a, 'b, 'c>(
   cx: &mut ComputeContext<'b, 'c>,
-  pk: &'a PublicKey,
-  sk: &'a SecretKey,
+  kp: &'a Keypair,
 ) -> JsResult<'b, JsObject> {
   let keys_obj = JsObject::new(cx);
   let curve_val = cx.string("ed25519");
-  let id_val = cx.string({
-    let mut p = encode_key(&pk.0);
-    p.insert(0, '@');
-    p
-  });
-  let private_val = cx.string(encode_key(&sk.0));
-  let public_val = cx.string(encode_key(&pk.0));
+  let id_val = cx.string(kp.public.as_base64().wrap('@', ".ed25519"));
+  let private_val = cx.string(kp.as_base64().with_suffix(".ed25519"));
+  let public_val = cx.string(kp.public.as_base64().with_suffix(".ed25519"));
   keys_obj.set(cx, "curve", curve_val)?;
   keys_obj.set(cx, "id", id_val)?;
   keys_obj.set(cx, "private", private_val)?;
@@ -160,4 +112,39 @@ pub fn bytes_to_buffer<'a, 'b, 'c>(
     }
   });
   Ok(buffer)
+}
+
+pub trait StringExt {
+  fn with_suffix(self, s: &str) -> Self;
+  fn wrap(self, prefix: char, suffix: &str) -> Self;
+}
+
+impl StringExt for String {
+  fn with_suffix(mut self, s: &str) -> Self {
+    self.push_str(s);
+    self
+  }
+  fn wrap(mut self, prefix: char, suffix: &str) -> Self {
+    self.insert(0, prefix);
+    self.push_str(suffix);
+    self
+  }
+}
+
+pub trait OptionExt<T> {
+  fn or_throw<'a>(
+    self,
+    cx: &mut impl Context<'a>,
+    msg: &'static str,
+  ) -> Result<T, neon::result::Throw>;
+}
+
+impl<T: Debug> OptionExt<T> for Option<T> {
+  fn or_throw<'a>(
+    self,
+    cx: &mut impl Context<'a>,
+    msg: &'static str,
+  ) -> Result<T, neon::result::Throw> {
+    self.ok_or_else(|| cx.throw_error::<_, T>(msg).unwrap_err())
+  }
 }
