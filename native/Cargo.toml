@@ -5,6 +5,7 @@ authors = ["Andre Staltz <andre@staltz.com>"]
 license = "MIT"
 build = "build.rs"
 exclude = ["artifacts.json", "index.node"]
+edition = "2018"
 
 [lib]
 name = "ssb_keys_rs"

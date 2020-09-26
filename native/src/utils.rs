@@ -1,5 +1,3 @@
-extern crate neon;
-
 use neon::object::This;
 use neon::prelude::*;
 use ssb_crypto::Keypair;
