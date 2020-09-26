@@ -1,4 +1,5 @@
 use super::utils::{self, arg_as_string_or_field, OptionExt, StringExt};
+use arrayvec::ArrayVec;
 use neon::prelude::*;
 
 // TODO NetworkKey isn't a great name, I guess
@@ -80,12 +81,8 @@ pub fn neon_sign_obj(mut cx: FunctionContext) -> JsResult<JsObject> {
 
   let msg = {
     let null = cx.null();
-    let args: Vec<Handle<JsValue>> = vec![obj.upcast(), null.upcast(), cx.number(2).upcast()];
-    let stringified = cx
-      .compute_scoped(|cx2| utils::json_stringify(cx2, args))
-      .or_else(|_| cx.throw_error("failed to JSON.stringify the given `object` argument"))?
-      .value();
-    stringified.into_bytes()
+    let args = ArrayVec::from([obj.upcast(), null.upcast(), cx.number(2).upcast()]);
+    utils::json_stringify(&mut cx, args)?.value().into_bytes()
   };
 
   // TODO this is exactly the same inside neon_verify_obj, maybe could refactor
@@ -206,14 +203,12 @@ pub fn neon_verify_obj(mut cx: FunctionContext) -> JsResult<JsBoolean> {
       .set(&mut cx, "signature", undef) // `delete` keyword in JS would be better
       .or_else(|_| cx.throw_error("failed to remove the `signature` field from the object"))?;
 
-    let null = cx.null();
-    let args: Vec<Handle<JsValue>> =
-      vec![verify_obj.upcast(), null.upcast(), cx.number(2).upcast()];
-    let stringified = cx
-      .compute_scoped(|cx2| utils::json_stringify(cx2, args))
-      .or_else(|_| cx.throw_error("failed to JSON.stringify the given verifying object"))?
-      .value();
-    stringified.into_bytes()
+    let args = ArrayVec::from([
+      verify_obj.upcast(),
+      cx.null().upcast(),
+      cx.number(2).upcast(),
+    ]);
+    utils::json_stringify(&mut cx, args)?.value().into_bytes()
   };
 
   let passed = match hmac_key {

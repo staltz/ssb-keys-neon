@@ -1,4 +1,5 @@
 use super::utils::{self, StringExt};
+use arrayvec::ArrayVec;
 use neon::prelude::*;
 use ssb_crypto::hash;
 
@@ -32,10 +33,7 @@ pub fn neon_hash(mut cx: FunctionContext) -> JsResult<JsString> {
     }
   }?;
 
-  let data_buffer = {
-    let args: Vec<Handle<JsValue>> = vec![data, enc];
-    cx.compute_scoped(|cx2| utils::buffer_from(cx2, args))
-  }?;
+  let data_buffer = utils::buffer_from(&mut cx, ArrayVec::from([data, enc]))?;
   let data_bytes = cx.borrow(&data_buffer, |bytes| bytes.as_slice::<u8>());
 
   Ok(cx.string(hash(data_bytes).as_base64().with_suffix(".sha256")))

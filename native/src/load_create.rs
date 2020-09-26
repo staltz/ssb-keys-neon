@@ -9,7 +9,7 @@ use std::io::prelude::*;
 use std::io::{Error, ErrorKind};
 use std::path::Path;
 
-fn internal_create(path: &String) -> Result<Keypair, Error> {
+fn internal_create(path: &str) -> Result<Keypair, Error> {
   // TODO this path handling should be in ssb-keyfile
   let path = Path::new(path).to_path_buf();
   let _ = fs::create_dir_all(&path);
@@ -37,7 +37,7 @@ fn internal_create(path: &String) -> Result<Keypair, Error> {
   Ok(keypair)
 }
 
-fn internal_load(path: &String) -> Result<Keypair, SSBError> {
+fn internal_load(path: &str) -> Result<Keypair, SSBError> {
   // TODO this path handling should be in ssb-keyfile
   let path = Path::new(path).to_path_buf();
   let _ = fs::create_dir_all(&path);

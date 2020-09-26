@@ -1,6 +1,6 @@
 use super::utils;
+use arrayvec::ArrayVec;
 use neon::prelude::*;
-
 use ssb_crypto::secretbox::{Hmac, Key, Nonce};
 
 pub fn neon_secret_box(mut cx: FunctionContext) -> JsResult<JsValue> {
@@ -10,13 +10,9 @@ pub fn neon_secret_box(mut cx: FunctionContext) -> JsResult<JsValue> {
     return Ok(cx.undefined().upcast());
   }
 
-  let mut plaintext = {
-    let stringified = cx
-      .compute_scoped(|cx2| utils::json_stringify(cx2, vec![arg1]))
-      .or_else(|_| cx.throw_error("failed to JSON.stringify the given `msg` argument"))?
-      .value();
-    stringified.into_bytes()
-  };
+  let mut plaintext = utils::json_stringify(&mut cx, ArrayVec::from([arg1]))?
+    .value()
+    .into_bytes();
 
   let js_key = cx.argument::<JsValue>(1).and_then(|v| {
     if v.is_a::<JsBuffer>() {
@@ -36,8 +32,7 @@ pub fn neon_secret_box(mut cx: FunctionContext) -> JsResult<JsValue> {
   let hmac = key.seal(&mut plaintext, &nonce);
   // `plaintext` now contains the cyphertext. "Attached" format begins with the hmac:
   plaintext.splice(0..0, hmac.0.iter().cloned());
-  let buffer = cx.compute_scoped(|mut cx2| utils::bytes_to_buffer(&mut cx2, &plaintext))?;
-
+  let buffer = utils::bytes_to_buffer(&mut cx, &plaintext)?;
   Ok(buffer.upcast())
 }
 
@@ -75,12 +70,9 @@ pub fn neon_secret_unbox(mut cx: FunctionContext) -> JsResult<JsValue> {
   if plaintext_str.is_err() {
     return Ok(cx.undefined().upcast());
   }
-  let plaintext_str = plaintext_str.unwrap();
+  let plaintext_str = cx.string(plaintext_str.unwrap());
 
-  let out = {
-    let args: Vec<Handle<JsString>> = vec![cx.string(plaintext_str)];
-    cx.compute_scoped(|cx2| utils::json_parse(cx2, args))
-  };
+  let out = utils::json_parse(&mut cx, plaintext_str);
   if out.is_err() {
     return Ok(cx.undefined().upcast());
   }

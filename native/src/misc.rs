@@ -11,10 +11,9 @@ pub fn neon_get_tag(mut cx: FunctionContext) -> JsResult<JsString> {
       }
     })
     .or_else(|_| cx.throw_error("failed to understand the `path` argument"))?
-    .value()
-    .clone();
+    .value();
 
-  let output = input.split_off(input.find(".").unwrap_or(input.len()) + 1);
+  let output = input.split_off(input.find('.').unwrap_or(input.len()) + 1);
 
   Ok(cx.string(output))
 }

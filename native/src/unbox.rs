@@ -1,20 +1,15 @@
 use super::utils::{self, arg_as_string_or_field, OptionExt};
+use arrayvec::ArrayVec;
 use neon::prelude::*;
 use neon::result::Throw;
-use private_box;
-
 use ssb_crypto::ephemeral::sk_to_curve;
 use ssb_crypto::{Keypair, PublicKey};
 
 pub fn neon_box(mut cx: FunctionContext) -> JsResult<JsString> {
-  let msg = {
-    let arg1 = cx.argument::<JsValue>(0)?;
-    let stringified = cx
-      .compute_scoped(|cx2| utils::json_stringify(cx2, vec![arg1]))
-      .or_else(|_| cx.throw_error("failed to JSON.stringify the given `msg` argument"))?
-      .value();
-    stringified.into_bytes()
-  };
+  let arg1 = cx.argument::<JsValue>(0)?;
+  let msg = utils::json_stringify(&mut cx, ArrayVec::from([arg1]))?
+    .value()
+    .into_bytes();
 
   let recps: Vec<PublicKey> = cx
     .argument::<JsValue>(1)
@@ -91,12 +86,9 @@ pub fn neon_unbox(mut cx: FunctionContext) -> JsResult<JsValue> {
   if msg_str.is_err() {
     return Ok(cx.undefined().upcast());
   }
-  let msg_str = msg_str.unwrap();
+  let msg_str = cx.string(msg_str.unwrap());
 
-  let out = {
-    let args: Vec<Handle<JsString>> = vec![cx.string(msg_str)];
-    cx.compute_scoped(|cx2| utils::json_parse(cx2, args))
-  };
+  let out = utils::json_parse(&mut cx, msg_str);
   if out.is_err() {
     return Ok(cx.undefined().upcast());
   }
@@ -140,10 +132,7 @@ pub fn neon_unbox_key(mut cx: FunctionContext) -> JsResult<JsValue> {
     return Ok(cx.undefined().upcast());
   }
 
-  let buffer = cx
-    .compute_scoped(|mut cx2| utils::bytes_to_buffer(&mut cx2, &opened_key.unwrap().as_array()))
-    .or_else(|_| cx.throw_error("failed to create JsBuffer for `unboxKey`"))?;
-
+  let buffer = utils::bytes_to_buffer(&mut cx, &opened_key.unwrap().as_array())?;
   Ok(buffer.upcast())
 }
 
@@ -190,12 +179,9 @@ pub fn neon_unbox_body(mut cx: FunctionContext) -> JsResult<JsValue> {
   if msg_str.is_err() {
     return Ok(cx.undefined().upcast());
   }
-  let msg_str = msg_str.unwrap();
+  let msg_str = cx.string(msg_str.unwrap());
 
-  let out = {
-    let args: Vec<Handle<JsString>> = vec![cx.string(msg_str)];
-    cx.compute_scoped(|cx2| utils::json_parse(cx2, args))
-  };
+  let out = utils::json_parse(&mut cx, msg_str);
   if out.is_err() {
     return Ok(cx.undefined().upcast());
   }
@@ -223,11 +209,6 @@ pub fn neon_sk_to_curve(mut cx: FunctionContext) -> JsResult<JsValue> {
     return cx.throw_error("failed to run ssbSecretKeyToPrivateBoxSecret");
   }
 
-  let buffer = cx
-    .compute_scoped(|mut cx2| utils::bytes_to_buffer(&mut cx2, &curve.unwrap().0))
-    .or_else(|_| {
-      cx.throw_error("failed to create JsBuffer for `ssbSecretKeyToPrivateBoxSecret`")
-    })?;
-
+  let buffer = utils::bytes_to_buffer(&mut cx, &curve.unwrap().0)?;
   Ok(buffer.upcast())
 }

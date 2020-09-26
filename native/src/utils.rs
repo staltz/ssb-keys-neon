@@ -1,3 +1,5 @@
+use arrayvec::ArrayVec;
+use neon::handle::Managed;
 use neon::object::This;
 use neon::prelude::*;
 use ssb_crypto::Keypair;
@@ -19,64 +21,48 @@ pub fn make_keys_obj<'a, 'b, 'c>(
   Ok(keys_obj)
 }
 
+pub fn call_builtin<'a, T>(
+  cx: &mut impl Context<'a>,
+  module: &str,
+  name: &str,
+  args: impl IntoIterator<Item = Handle<'a, JsValue>>,
+) -> JsResult<'a, T>
+where
+  T: Value + Managed,
+{
+  let func = cx
+    .global()
+    .get(cx, module)?
+    .downcast::<JsObject>()
+    .or_throw(cx)?
+    .get(cx, name)?
+    .downcast::<JsFunction>()
+    .or_throw(cx)?;
+
+  let null = cx.null();
+  func.call(cx, null, args)?.downcast::<T>().or_throw(cx)
+}
+
 // TODO publish to some neon-helpers library?
-pub fn json_stringify<'a, 'b>(
-  mut cx: ComputeContext<'a, 'b>,
-  args: Vec<Handle<JsValue>>,
+pub fn json_stringify<'a>(
+  cx: &mut impl Context<'a>,
+  args: impl IntoIterator<Item = Handle<'a, JsValue>>,
 ) -> JsResult<'a, JsString> {
-  let stringify = cx
-    .global()
-    .get(&mut cx, "JSON")?
-    .downcast::<JsObject>()
-    .or_throw(&mut cx)?
-    .get(&mut cx, "stringify")?
-    .downcast::<JsFunction>()
-    .or_throw(&mut cx)?;
-  let null = cx.null();
-  stringify
-    .call(&mut cx, null, args)?
-    .downcast::<JsString>()
-    .or_throw(&mut cx)
+  call_builtin(cx, "JSON", "stringify", args)
 }
 
-// TODO publish to some neon-helpers library?
-pub fn json_parse<'a, 'b>(
-  mut cx: ComputeContext<'a, 'b>,
-  args: Vec<Handle<JsString>>,
+pub fn json_parse<'a>(
+  cx: &mut impl Context<'a>,
+  arg: Handle<'a, JsString>,
 ) -> JsResult<'a, JsObject> {
-  let parse = cx
-    .global()
-    .get(&mut cx, "JSON")?
-    .downcast::<JsObject>()
-    .or_throw(&mut cx)?
-    .get(&mut cx, "parse")?
-    .downcast::<JsFunction>()
-    .or_throw(&mut cx)?;
-  let null = cx.null();
-  parse
-    .call(&mut cx, null, args)?
-    .downcast::<JsObject>()
-    .or_throw(&mut cx)
+  call_builtin(cx, "JSON", "parse", ArrayVec::from([arg.upcast()]))
 }
 
-// TODO publish to some neon-helpers library?
-pub fn buffer_from<'a, 'b>(
-  mut cx: ComputeContext<'a, 'b>,
-  args: Vec<Handle<JsValue>>,
+pub fn buffer_from<'a>(
+  cx: &mut impl Context<'a>,
+  args: impl IntoIterator<Item = Handle<'a, JsValue>>,
 ) -> JsResult<'a, JsBuffer> {
-  let from = cx
-    .global()
-    .get(&mut cx, "Buffer")?
-    .downcast::<JsObject>()
-    .or_throw(&mut cx)?
-    .get(&mut cx, "from")?
-    .downcast::<JsFunction>()
-    .or_throw(&mut cx)?;
-  let null = cx.null();
-  from
-    .call(&mut cx, null, args)?
-    .downcast::<JsBuffer>()
-    .or_throw(&mut cx)
+  call_builtin(cx, "Buffer", "from", args)
 }
 
 // TODO publish to some neon-helpers library?
@@ -98,17 +84,10 @@ pub fn clone_js_obj<'a, 'b>(
   Ok(new_obj)
 }
 
-pub fn bytes_to_buffer<'a, 'b, 'c>(
-  cx: &mut ComputeContext<'b, 'c>,
-  bytes: &[u8],
-) -> JsResult<'b, JsBuffer> {
-  let length = bytes.len() as usize;
+pub fn bytes_to_buffer<'a>(cx: &mut impl Context<'a>, bytes: &[u8]) -> JsResult<'a, JsBuffer> {
   let mut buffer = cx.buffer(bytes.len() as u32)?;
   cx.borrow_mut(&mut buffer, |data| {
-    let slice = data.as_mut_slice();
-    for i in 0..length {
-      slice[i] = bytes[i];
-    }
+    data.as_mut_slice().copy_from_slice(bytes)
   });
   Ok(buffer)
 }
