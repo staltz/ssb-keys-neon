@@ -1,4 +1,4 @@
-use super::utils::{self, OptionExt, StringExt};
+use super::utils::{self, arg_as_string_or_field, OptionExt, StringExt};
 use neon::prelude::*;
 
 // TODO NetworkKey isn't a great name, I guess
@@ -13,22 +13,11 @@ pub fn neon_sign_obj(mut cx: FunctionContext) -> JsResult<JsObject> {
   }
 
   let keypair = {
-    let private_str = cx
-      .argument::<JsValue>(0)
-      .and_then(|v| {
-        if v.is_a::<JsString>() {
-          v.downcast::<JsString>().or_throw(&mut cx)
-        } else if v.is_a::<JsObject>() {
-          v.downcast::<JsObject>()
-            .or_throw(&mut cx)?
-            .get(&mut cx, "private")?
-            .downcast::<JsString>()
-            .or_throw(&mut cx)
-        } else {
-          cx.throw_error("expected 1st argument to be the keys object or the private key string")
-        }
-      })?
-      .value();
+    let private_str = arg_as_string_or_field(&mut cx, 0, "private").or_throw(
+      &mut cx,
+      "expected 1st argument to be the keys object or the private key string",
+    )?;
+
     // println!("private_str {}", private_str);
     Keypair::from_base64(&private_str).ok_or_else(|| {
       cx.throw_error::<_, Keypair>("cannot decode private key bytes")

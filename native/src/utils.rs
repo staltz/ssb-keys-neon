@@ -1,5 +1,6 @@
 extern crate neon;
 
+use neon::object::This;
 use neon::prelude::*;
 use ssb_crypto::Keypair;
 use std::fmt::Debug;
@@ -112,6 +113,24 @@ pub fn bytes_to_buffer<'a, 'b, 'c>(
     }
   });
   Ok(buffer)
+}
+
+pub fn arg_as_string_or_field<'a, T: This>(
+  cx: &mut CallContext<'a, T>,
+  arg: i32,
+  field: &'static str,
+) -> Option<String> {
+  let v = cx.argument::<JsValue>(arg).ok()?;
+
+  if let Ok(s) = v.downcast::<JsString>() {
+    Some(s.value())
+  } else if let Ok(obj) = v.downcast::<JsObject>() {
+    let s = obj.get(cx, field).ok()?.downcast::<JsString>().ok()?;
+
+    Some(s.value())
+  } else {
+    None
+  }
 }
 
 pub trait StringExt {

@@ -1,4 +1,4 @@
-use super::utils::{self, OptionExt};
+use super::utils::{self, arg_as_string_or_field, OptionExt};
 use neon::prelude::*;
 use neon::result::Throw;
 use private_box;
@@ -72,22 +72,10 @@ pub fn neon_unbox(mut cx: FunctionContext) -> JsResult<JsValue> {
   let cyphertext = cyphertext.unwrap();
 
   let private_key = {
-    let private_str = cx
-      .argument::<JsValue>(1)
-      .and_then(|v| {
-        if v.is_a::<JsString>() {
-          v.downcast::<JsString>().or_throw(&mut cx)
-        } else if v.is_a::<JsObject>() {
-          v.downcast::<JsObject>()
-            .or_throw(&mut cx)?
-            .get(&mut cx, "private")?
-            .downcast::<JsString>()
-            .or_throw(&mut cx)
-        } else {
-          cx.throw_error("expected 1st argument to be the keys object or the private key string")
-        }
-      })?
-      .value();
+    let private_str = arg_as_string_or_field(&mut cx, 1, "private").or_throw(
+      &mut cx,
+      "expected 2nd argument to be the keys object or the private key string",
+    )?;
     Keypair::from_base64(&private_str).or_throw(
       &mut cx,
       "cannot base64 decode the private key given to `signObj`",
@@ -137,23 +125,10 @@ pub fn neon_unbox_key(mut cx: FunctionContext) -> JsResult<JsValue> {
   let cyphertext = cyphertext.unwrap();
 
   let keypair = {
-    let private_str = cx
-      .argument::<JsValue>(1)
-      .and_then(|v| {
-        if v.is_a::<JsString>() {
-          v.downcast::<JsString>().or_throw(&mut cx)
-        } else if v.is_a::<JsObject>() {
-          v.downcast::<JsObject>()
-            .or_throw(&mut cx)?
-            .get(&mut cx, "private")?
-            .downcast::<JsString>()
-            .or_throw(&mut cx)
-        } else {
-          cx.throw_error("expected 1st argument to be the keys object or the private key string")
-        }
-      })?
-      .value();
-
+    let private_str = arg_as_string_or_field(&mut cx, 1, "private").or_throw(
+      &mut cx,
+      "expected 2nd argument to be the keys object or the private key string",
+    )?;
     Keypair::from_base64(&private_str).or_throw(
       &mut cx,
       "cannot base64 decode the private key given to `signObj`",
@@ -232,22 +207,11 @@ pub fn neon_unbox_body(mut cx: FunctionContext) -> JsResult<JsValue> {
 // ssbSecretKeyToPrivateBoxSecret
 pub fn neon_sk_to_curve(mut cx: FunctionContext) -> JsResult<JsValue> {
   let keypair = {
-    let private_str = cx
-      .argument::<JsValue>(0)
-      .and_then(|v| {
-        if v.is_a::<JsString>() {
-          v.downcast::<JsString>().or_throw(&mut cx)
-        } else if v.is_a::<JsObject>() {
-          v.downcast::<JsObject>()
-            .or_throw(&mut cx)?
-            .get(&mut cx, "private")?
-            .downcast::<JsString>()
-            .or_throw(&mut cx)
-        } else {
-          cx.throw_error("expected 1st argument to be the keys object or the private key string")
-        }
-      })?
-      .value();
+    let private_str = arg_as_string_or_field(&mut cx, 0, "private").or_throw(
+      &mut cx,
+      "expected 1st argument to be the keys object or the private key string",
+    )?;
+
     Keypair::from_base64(&private_str).or_throw(
       &mut cx,
       "cannot base64 decode the private key given to `signObj`",
