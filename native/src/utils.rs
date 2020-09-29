@@ -3,7 +3,6 @@ use neon::handle::Managed;
 use neon::object::This;
 use neon::prelude::*;
 use ssb_crypto::Keypair;
-use std::fmt::Debug;
 
 pub fn make_keys_obj<'a>(cx: &mut impl Context<'a>, kp: &Keypair) -> JsResult<'a, JsObject> {
   let keys_obj = JsObject::new(cx);
@@ -92,18 +91,51 @@ pub fn bytes_to_buffer<'a>(cx: &mut impl Context<'a>, bytes: &[u8]) -> JsResult<
 pub fn arg_as_string_or_field<'a, T: This>(
   cx: &mut CallContext<'a, T>,
   arg: i32,
-  field: &'static str,
+  field: &str,
 ) -> Option<String> {
-  let v = cx.argument::<JsValue>(arg).ok()?;
+  let v = cx.argument(arg).ok()?;
+  get_string_or_field(cx, v, field)
+}
 
-  if let Ok(s) = v.downcast::<JsString>() {
+pub fn get_string_or_field<'a, T: This>(
+  cx: &mut CallContext<'a, T>,
+  v: Handle<JsValue>,
+  field: &str,
+) -> Option<String> {
+  if let Some(s) = v.try_downcast::<JsString>() {
     Some(s.value())
-  } else if let Ok(obj) = v.downcast::<JsObject>() {
-    let s = obj.get(cx, field).ok()?.downcast::<JsString>().ok()?;
-
+  } else if let Some(obj) = v.try_downcast::<JsObject>() {
+    let f = obj.get(cx, field).ok()?;
+    let s = f.try_downcast::<JsString>()?;
     Some(s.value())
   } else {
     None
+  }
+}
+
+pub fn type_name(v: &Handle<JsValue>) -> &'static str {
+  if v.is_a::<JsArray>() {
+    "array"
+  } else if v.is_a::<JsArrayBuffer>() {
+    "array buffer"
+  } else if v.is_a::<JsBoolean>() {
+    "boolean"
+  } else if v.is_a::<JsBuffer>() {
+    "buffer"
+  } else if v.is_a::<JsError>() {
+    "error"
+  } else if v.is_a::<JsNull>() {
+    "null"
+  } else if v.is_a::<JsNumber>() {
+    "number"
+  } else if v.is_a::<JsObject>() {
+    "object"
+  } else if v.is_a::<JsString>() {
+    "string"
+  } else if v.is_a::<JsUndefined>() {
+    "undefined"
+  } else {
+    "something else" // :)
   }
 }
 
@@ -125,19 +157,38 @@ impl StringExt for String {
 }
 
 pub trait OptionExt<T> {
-  fn or_throw<'a>(
+  fn or_throw<'a, S: AsRef<str>>(
     self,
     cx: &mut impl Context<'a>,
-    msg: &'static str,
+    msg: S,
   ) -> Result<T, neon::result::Throw>;
 }
 
-impl<T: Debug> OptionExt<T> for Option<T> {
-  fn or_throw<'a>(
+impl<T> OptionExt<T> for Option<T> {
+  fn or_throw<'a, S: AsRef<str>>(
     self,
     cx: &mut impl Context<'a>,
-    msg: &'static str,
+    msg: S,
   ) -> Result<T, neon::result::Throw> {
-    self.ok_or_else(|| cx.throw_error::<_, T>(msg).unwrap_err())
+    // Result<T, _>::unwrap_err and expect_err require T: Debug, which JsArray doesn't impl
+    self.ok_or_else(|| cx.throw_error::<_, T>(msg).err().unwrap())
+  }
+}
+
+// `if let Ok(s) = v.downcast::<JsString>() { ... }`
+// can be used with zero cost (aside from the type tag check)
+// when this PR is merged: https://github.com/neon-bindings/neon/pull/606
+//
+// In the meantime, we'll use this:
+pub trait HandleExt {
+  fn try_downcast<U: Value>(&self) -> Option<Handle<U>>;
+}
+impl<'a, T: Value> HandleExt for Handle<'a, T> {
+  fn try_downcast<U: Value>(&self) -> Option<Handle<U>> {
+    if self.is_a::<U>() {
+      Some(self.downcast::<U>().unwrap())
+    } else {
+      None
+    }
   }
 }

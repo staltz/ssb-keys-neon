@@ -1,7 +1,6 @@
-use super::utils::{self, arg_as_string_or_field, OptionExt};
+use super::utils::{self, arg_as_string_or_field, get_string_or_field, HandleExt, OptionExt};
 use arrayvec::ArrayVec;
 use neon::prelude::*;
-use neon::result::Throw;
 use ssb_crypto::ephemeral::sk_to_curve;
 use ssb_crypto::{Keypair, PublicKey};
 
@@ -12,31 +11,20 @@ pub fn neon_box(mut cx: FunctionContext) -> JsResult<JsString> {
     .into_bytes();
 
   let recps: Vec<PublicKey> = cx
-    .argument::<JsValue>(1)
-    .and_then(|v| {
-      if v.is_a::<JsArray>() {
-        v.downcast::<JsArray>().or_throw(&mut cx)?.to_vec(&mut cx)
-      } else {
-        cx.throw_error("expected 2nd argument to be an array of recipients")
-      }
-    })?
+    .argument::<JsValue>(1)?
+    .try_downcast::<JsArray>()
+    .or_throw(
+      &mut cx,
+      "expected 2nd argument to be an array of recipients",
+    )?
+    .to_vec(&mut cx)?
     .iter()
     .flat_map(|recp| {
-      let public_key: Result<PublicKey, Throw> = {
-        let public_str = if recp.is_a::<JsObject>() {
-          recp
-            .downcast::<JsObject>()
-            .or_throw(&mut cx)?
-            .get(&mut cx, "public")?
-            .downcast::<JsString>()
-            .or_throw(&mut cx)?
-            .value()
-        } else {
-          recp.downcast::<JsString>().or_throw(&mut cx)?.value()
-        };
-        PublicKey::from_base64(&public_str).or_throw(&mut cx, "cannot base64 decode the public key")
-      };
-      public_key
+      let public_str = get_string_or_field(&mut cx, *recp, "public").or_throw(
+        &mut cx,
+        "each recipient must be a keys object or public key string",
+      )?;
+      PublicKey::from_base64(&public_str).or_throw(&mut cx, "cannot base64 decode the public key")
     })
     .collect();
 
