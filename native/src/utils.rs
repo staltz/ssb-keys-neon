@@ -5,10 +5,7 @@ use neon::prelude::*;
 use ssb_crypto::Keypair;
 use std::fmt::Debug;
 
-pub fn make_keys_obj<'a, 'b, 'c>(
-  cx: &mut ComputeContext<'b, 'c>,
-  kp: &'a Keypair,
-) -> JsResult<'b, JsObject> {
+pub fn make_keys_obj<'a>(cx: &mut impl Context<'a>, kp: &Keypair) -> JsResult<'a, JsObject> {
   let keys_obj = JsObject::new(cx);
   let curve_val = cx.string("ed25519");
   let id_val = cx.string(kp.public.as_base64().wrap('@', ".ed25519"));
@@ -66,20 +63,20 @@ pub fn buffer_from<'a>(
 }
 
 // TODO publish to some neon-helpers library?
-pub fn clone_js_obj<'a, 'b>(
-  mut cx: ComputeContext<'a, 'b>,
+pub fn clone_js_obj<'a>(
+  cx: &mut impl Context<'a>,
   obj: Handle<JsObject>,
 ) -> JsResult<'a, JsObject> {
   let new_obj = cx.empty_object();
-  let keys = obj.get_own_property_names(&mut cx)?;
+  let keys = obj.get_own_property_names(cx)?;
   for i in 0..keys.len() {
     let key = keys
-      .get(&mut cx, i)?
+      .get(cx, i)?
       .downcast::<JsString>()
-      .or_throw(&mut cx)?
+      .or_throw(cx)?
       .value();
-    let val = obj.get(&mut cx, key.as_str())?;
-    new_obj.set(&mut cx, key.as_str(), val)?;
+    let val = obj.get(cx, key.as_str())?;
+    new_obj.set(cx, key.as_str(), val)?;
   }
   Ok(new_obj)
 }

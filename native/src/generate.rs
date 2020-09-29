@@ -6,7 +6,7 @@ pub fn neon_generate(mut cx: FunctionContext) -> JsResult<JsObject> {
   let args_length = cx.len();
   if args_length == 0 {
     let keypair = Keypair::generate();
-    return cx.compute_scoped(|mut cx2| make_keys_obj(&mut cx2, &keypair));
+    return make_keys_obj(&mut cx, &keypair);
   }
 
   // First argument: curve (default = "ed25519")
@@ -49,5 +49,5 @@ pub fn neon_generate(mut cx: FunctionContext) -> JsResult<JsObject> {
     None => Ok(Keypair::generate()),
   }?;
 
-  cx.compute_scoped(|mut cx2| make_keys_obj(&mut cx2, &keypair))
+  make_keys_obj(&mut cx, &keypair)
 }

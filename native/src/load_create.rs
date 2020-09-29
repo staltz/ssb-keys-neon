@@ -66,7 +66,7 @@ impl Task for CreateTask {
   fn complete(self, mut cx: TaskContext, result: Result<Keypair, Error>) -> JsResult<JsObject> {
     let keypair = result.or_else(|e| cx.throw_error(e.to_string()))?;
 
-    cx.compute_scoped(|mut cx2| make_keys_obj(&mut cx2, &keypair))
+    make_keys_obj(&mut cx, &keypair)
   }
 }
 
@@ -86,7 +86,7 @@ impl Task for LoadTask {
   fn complete(self, mut cx: TaskContext, result: Result<Keypair, SSBError>) -> JsResult<JsObject> {
     let keypair = result.or_else(|e| cx.throw_error(e.to_string()))?;
 
-    cx.compute_scoped(|mut cx2| make_keys_obj(&mut cx2, &keypair))
+    make_keys_obj(&mut cx, &keypair)
   }
 }
 
@@ -106,7 +106,7 @@ impl Task for LoadOrCreateTask {
   fn complete(self, mut cx: TaskContext, result: Result<Keypair, Error>) -> JsResult<JsObject> {
     let keypair = result.or_else(|e| cx.throw_error(e.to_string()))?;
 
-    cx.compute_scoped(|mut cx2| make_keys_obj(&mut cx2, &keypair))
+    make_keys_obj(&mut cx, &keypair)
   }
 }
 
@@ -156,7 +156,7 @@ pub fn neon_create_sync(mut cx: FunctionContext) -> JsResult<JsObject> {
 
   let keypair = internal_create(&path).or_else(|e| cx.throw_error(e.to_string()))?;
 
-  cx.compute_scoped(|mut cx2| make_keys_obj(&mut cx2, &keypair))
+  make_keys_obj(&mut cx, &keypair)
 }
 
 pub fn neon_load(mut cx: FunctionContext) -> JsResult<JsUndefined> {
@@ -203,7 +203,7 @@ pub fn neon_load_sync(mut cx: FunctionContext) -> JsResult<JsObject> {
 
   let keypair = internal_load(&path).or_else(|e| cx.throw_error(e.to_string()))?;
 
-  cx.compute_scoped(|mut cx2| make_keys_obj(&mut cx2, &keypair))
+  make_keys_obj(&mut cx, &keypair)
 }
 
 pub fn neon_load_or_create(mut cx: FunctionContext) -> JsResult<JsUndefined> {
@@ -252,5 +252,5 @@ pub fn neon_load_or_create_sync(mut cx: FunctionContext) -> JsResult<JsObject> {
     .or_else(|_| internal_create(&path))
     .or_else(|e| cx.throw_error(e.to_string()))?;
 
-  cx.compute_scoped(|mut cx2| make_keys_obj(&mut cx2, &keypair))
+  make_keys_obj(&mut cx, &keypair)
 }

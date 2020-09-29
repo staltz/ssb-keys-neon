@@ -75,9 +75,7 @@ pub fn neon_sign_obj(mut cx: FunctionContext) -> JsResult<JsObject> {
     })?
   };
 
-  let out_obj = cx
-    .compute_scoped(|cx2| utils::clone_js_obj(cx2, obj))
-    .or_else(|_| cx.throw_error("failed to create a clone of a javascript object"))?;
+  let out_obj = utils::clone_js_obj(&mut cx, obj)?;
 
   let msg = {
     let null = cx.null();
@@ -195,9 +193,7 @@ pub fn neon_verify_obj(mut cx: FunctionContext) -> JsResult<JsBoolean> {
   };
 
   let msg = {
-    let verify_obj = cx
-      .compute_scoped(|cx2| utils::clone_js_obj(cx2, obj))
-      .or_else(|_| cx.throw_error("failed to create a clone of a javascript object"))?;
+    let verify_obj = utils::clone_js_obj(&mut cx, obj)?;
     let undef = cx.undefined();
     verify_obj
       .set(&mut cx, "signature", undef) // `delete` keyword in JS would be better
