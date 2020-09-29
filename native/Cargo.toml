@@ -1,13 +1,13 @@
 [package]
-name = "ssb-keys-rs"
-version = "7.2.0"
+name = "ssb-neon-keys"
+version = "8.0.0"
 authors = ["Andre Staltz <andre@staltz.com>"]
-license = "MIT"
+license = "AGPL-3.0"
 build = "build.rs"
 exclude = ["artifacts.json", "index.node"]
 
 [lib]
-name = "ssb_keys_rs"
+name = "ssb_neon_keys"
 crate-type = ["cdylib"]
 
 [build-dependencies]

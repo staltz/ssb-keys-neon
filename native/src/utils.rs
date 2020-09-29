@@ -1,5 +1,6 @@
 extern crate neon;
 
+use neon::handle::Managed;
 use neon::prelude::*;
 use ssb_crypto::Keypair;
 use std::fmt::Debug;
@@ -146,5 +147,27 @@ impl<T: Debug> OptionExt<T> for Option<T> {
     msg: &'static str,
   ) -> Result<T, neon::result::Throw> {
     self.ok_or_else(|| cx.throw_error::<_, T>(msg).unwrap_err())
+  }
+}
+
+pub trait ValueExt {
+  fn is_truthy<'a, C: Context<'a>>(&self, cx: &mut C) -> bool;
+}
+
+impl<T: Value + Managed> ValueExt for T {
+  fn is_truthy<'a, C: Context<'a>>(&self, cx: &mut C) -> bool {
+    let global = cx.global();
+    let boolean = global
+      .get(cx, "Boolean")
+      .unwrap()
+      .downcast::<JsFunction>()
+      .unwrap();
+    let args = vec![self.as_value(cx)];
+    let b = boolean
+      .call(cx, global, args)
+      .unwrap()
+      .downcast::<JsBoolean>()
+      .unwrap();
+    b.value()
   }
 }

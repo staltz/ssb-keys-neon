@@ -393,8 +393,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "ssb-keys-rs"
-version = "7.2.0"
+name = "ssb-neon-keys"
+version = "8.0.0"
 dependencies = [
  "base64 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "neon 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
