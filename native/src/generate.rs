@@ -1,4 +1,4 @@
-use super::utils::{make_keys_obj, OptionExt};
+use super::utils::{make_keys_obj, HandleExt, OptionExt};
 use neon::prelude::*;
 use ssb_crypto::Keypair;
 
@@ -10,17 +10,15 @@ pub fn neon_generate(mut cx: FunctionContext) -> JsResult<JsObject> {
   }
 
   // First argument: curve (default = "ed25519")
-  let curve = cx
+  let curve = if let Some(s) = cx
     .argument::<JsValue>(0)
-    .and_then(|v| {
-      if v.is_a::<JsString>() {
-        v.downcast::<JsString>().or_throw(&mut cx)
-      } else {
-        Ok(cx.string("ed25519"))
-      }
-    })
-    .or_else(|_| cx.throw_error("failed to understand `curve` argument"))?
-    .value();
+    .unwrap()
+    .try_downcast::<JsString>()
+  {
+    s.value()
+  } else {
+    "ed25519".to_string()
+  };
 
   // The only valid curve types: ['ed25519']
   if curve != "ed25519" {
@@ -31,14 +29,10 @@ pub fn neon_generate(mut cx: FunctionContext) -> JsResult<JsObject> {
   let maybe_seed = cx
     .argument_opt(1)
     .map(|v| {
-      if v.is_a::<JsBuffer>() {
-        v.downcast::<JsBuffer>().or_throw(&mut cx)
-      } else {
-        cx.throw_error("seed argument must be a buffer")
-      }
+      v.try_downcast::<JsBuffer>()
+        .or_throw(&mut cx, "seed argument must be a buffer")
     })
-    .transpose()
-    .or_else(|_| cx.throw_error("failed to understand `seed` argument"))?;
+    .transpose()?;
 
   // Use seed if given, else, generate from random
   let keypair = match maybe_seed {

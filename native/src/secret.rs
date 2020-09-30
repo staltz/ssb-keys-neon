@@ -1,4 +1,4 @@
-use super::utils;
+use super::utils::{self, ContextExt, OptionExt};
 use arrayvec::ArrayVec;
 use neon::prelude::*;
 use ssb_crypto::secretbox::{Hmac, Key, Nonce};
@@ -14,19 +14,11 @@ pub fn neon_secret_box(mut cx: FunctionContext) -> JsResult<JsValue> {
     .value()
     .into_bytes();
 
-  let js_key = cx.argument::<JsValue>(1).and_then(|v| {
-    if v.is_a::<JsBuffer>() {
-      v.downcast::<JsBuffer>().or_throw(&mut cx)
-    } else {
-      cx.throw_error("2nd argument must be the key as a buffer")
-    }
-  })?;
+  let js_key = cx.arg_as::<JsBuffer>(1, "2nd argument must be the key as a buffer")?;
 
   let key_bytes = cx.borrow(&js_key, |bytes| bytes.as_slice::<u8>());
-  if key_bytes.len() < 32 {
-    cx.throw_error("expected `secretbox` key to be at least 32 bytes")?;
-  }
-  let key = Key::from_slice(&key_bytes[0..32]).unwrap(); // infallible
+  let key = Key::from_slice(&key_bytes[0..32])
+    .or_throw(&mut cx, "expected `secretbox` key to be at least 32 bytes")?;
   let nonce = Nonce::from_slice(&key_bytes[0..24]).unwrap(); // infallible
 
   let hmac = key.seal(&mut plaintext, &nonce);
@@ -46,13 +38,7 @@ pub fn neon_secret_unbox(mut cx: FunctionContext) -> JsResult<JsValue> {
   let buffer = arg1.downcast::<JsBuffer>().or_throw(&mut cx)?;
   let cyphertext = cx.borrow(&buffer, |bytes| bytes.as_slice::<u8>());
 
-  let js_key = cx.argument::<JsValue>(1).and_then(|v| {
-    if v.is_a::<JsBuffer>() {
-      v.downcast::<JsBuffer>().or_throw(&mut cx)
-    } else {
-      cx.throw_error("2nd argument must be the key as a buffer")
-    }
-  })?;
+  let js_key = cx.arg_as::<JsBuffer>(1, "2nd argument must be the key as a buffer")?;
 
   let key_bytes = cx.borrow(&js_key, |bytes| bytes.as_slice::<u8>());
   if key_bytes.len() < 32 {

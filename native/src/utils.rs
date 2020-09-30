@@ -180,11 +180,11 @@ impl<T> OptionExt<T> for Option<T> {
 // when this PR is merged: https://github.com/neon-bindings/neon/pull/606
 //
 // In the meantime, we'll use this:
-pub trait HandleExt {
-  fn try_downcast<U: Value>(&self) -> Option<Handle<U>>;
+pub trait HandleExt<'a> {
+  fn try_downcast<U: Value>(&self) -> Option<Handle<'a, U>>;
 }
-impl<'a, T: Value> HandleExt for Handle<'a, T> {
-  fn try_downcast<U: Value>(&self) -> Option<Handle<U>> {
+impl<'a, T: Value> HandleExt<'a> for Handle<'a, T> {
+  fn try_downcast<U: Value>(&self) -> Option<Handle<'a, U>> {
     if self.is_a::<U>() {
       Some(self.downcast::<U>().unwrap())
     } else {
@@ -212,5 +212,25 @@ impl<T: Value + Managed> ValueExt for T {
       .downcast::<JsBoolean>()
       .unwrap();
     b.value()
+  }
+}
+
+// Like `cx.argument::<T>(index)?` but with a custom error msg
+pub trait ContextExt<'a> {
+  fn arg_as<T: Value>(
+    &mut self,
+    index: i32,
+    msg: &str,
+  ) -> Result<Handle<'a, T>, neon::result::Throw>;
+}
+
+impl<'a> ContextExt<'a> for FunctionContext<'a> {
+  fn arg_as<T: Value>(
+    &mut self,
+    index: i32,
+    msg: &str,
+  ) -> Result<Handle<'a, T>, neon::result::Throw> {
+    let v = self.argument::<JsValue>(index)?;
+    v.try_downcast::<T>().or_throw(self, msg)
   }
 }

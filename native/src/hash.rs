@@ -6,15 +6,10 @@ use ssb_crypto::hash;
 pub fn neon_hash(mut cx: FunctionContext) -> JsResult<JsString> {
   let args_length = cx.len();
 
-  let data = {
-    cx.argument::<JsValue>(0).and_then(|v| {
-      if v.is_a::<JsString>() || v.is_a::<JsBuffer>() {
-        Ok(v)
-      } else {
-        cx.throw_error("expected 1st argument to `hash` to be a string or buffer")
-      }
-    })
-  }?;
+  let data = cx.argument::<JsValue>(0)?;
+  if !(data.is_a::<JsString>() || data.is_a::<JsBuffer>()) {
+    return cx.throw_error("expected 1st argument to `hash` to be a string or buffer");
+  }
 
   let enc = {
     let fallback = cx.string("binary").upcast::<JsValue>();

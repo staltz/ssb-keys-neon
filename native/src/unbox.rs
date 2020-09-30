@@ -1,4 +1,4 @@
-use super::utils::{self, arg_as_string_or_field, get_string_or_field, HandleExt, OptionExt};
+use super::utils::{self, arg_as_string_or_field, get_string_or_field, ContextExt, OptionExt};
 use arrayvec::ArrayVec;
 use neon::prelude::*;
 use ssb_crypto::ephemeral::sk_to_curve;
@@ -11,12 +11,7 @@ pub fn neon_box(mut cx: FunctionContext) -> JsResult<JsString> {
     .into_bytes();
 
   let recps: Vec<PublicKey> = cx
-    .argument::<JsValue>(1)?
-    .try_downcast::<JsArray>()
-    .or_throw(
-      &mut cx,
-      "expected 2nd argument to be an array of recipients",
-    )?
+    .arg_as::<JsArray>(1, "expected 2nd argument to be an array of recipients")?
     .to_vec(&mut cx)?
     .iter()
     .flat_map(|recp| {
@@ -38,14 +33,7 @@ pub fn neon_box(mut cx: FunctionContext) -> JsResult<JsString> {
 pub fn neon_unbox(mut cx: FunctionContext) -> JsResult<JsValue> {
   let cyphertext = {
     let ctxt_str = cx
-      .argument::<JsValue>(0)
-      .and_then(|v| {
-        if v.is_a::<JsString>() {
-          v.downcast::<JsString>().or_throw(&mut cx)
-        } else {
-          cx.throw_error("expected 1st argument to be the cyphertext as a string")
-        }
-      })?
+      .arg_as::<JsString>(0, "expected 1st argument to be the cyphertext as a string")?
       .value();
     base64::decode_config(ctxt_str.trim_end_matches(".box"), base64::STANDARD)
   };
@@ -88,14 +76,7 @@ pub fn neon_unbox(mut cx: FunctionContext) -> JsResult<JsValue> {
 pub fn neon_unbox_key(mut cx: FunctionContext) -> JsResult<JsValue> {
   let cyphertext = {
     let ctxt_str = cx
-      .argument::<JsValue>(0)
-      .and_then(|v| {
-        if v.is_a::<JsString>() {
-          v.downcast::<JsString>().or_throw(&mut cx)
-        } else {
-          cx.throw_error("expected 1st argument to be the cyphertext as a string")
-        }
-      })?
+      .arg_as::<JsString>(0, "expected 1st argument to be the cyphertext as a string")?
       .value();
     base64::decode_config(ctxt_str.trim_end_matches(".box"), base64::STANDARD)
   };
@@ -128,34 +109,17 @@ pub fn neon_unbox_key(mut cx: FunctionContext) -> JsResult<JsValue> {
 pub fn neon_unbox_body(mut cx: FunctionContext) -> JsResult<JsValue> {
   let cyphertext = {
     let ctxt_str = cx
-      .argument::<JsValue>(0)
-      .and_then(|v| {
-        if v.is_a::<JsString>() {
-          v.downcast::<JsString>().or_throw(&mut cx)
-        } else {
-          cx.throw_error("expected 1st argument to be the cyphertext as a string")
-        }
-      })?
+      .arg_as::<JsString>(0, "expected 1st argument to be the cyphertext as a string")?
       .value();
-    let ctxt_str = if ctxt_str.ends_with(".box") {
-      String::from(ctxt_str.trim_end_matches(".box"))
-    } else {
-      ctxt_str
-    };
-    base64::decode_config(&ctxt_str, base64::STANDARD)
+    base64::decode_config(ctxt_str.trim_end_matches(".box"), base64::STANDARD)
   };
   if cyphertext.is_err() {
     return Ok(cx.undefined().upcast());
   }
   let cyphertext = cyphertext.unwrap();
 
-  let opened_key_buf = cx.argument::<JsValue>(1).and_then(|v| {
-    if v.is_a::<JsBuffer>() {
-      v.downcast::<JsBuffer>().or_throw(&mut cx)
-    } else {
-      cx.throw_error("expected 2nd argument to be a buffer for the opened key")
-    }
-  })?;
+  let opened_key_buf =
+    cx.arg_as::<JsBuffer>(1, "expected 2nd argument to be a buffer for the opened key")?;
   let opened_key = cx.borrow(&opened_key_buf, |data| data.as_slice::<u8>());
 
   let msg = private_box::decrypt_body_with_key_bytes(&cyphertext, &opened_key);

@@ -1,4 +1,4 @@
-use super::utils::make_keys_obj;
+use super::utils::{make_keys_obj, ContextExt};
 use neon::prelude::*;
 
 use ssb_crypto::Keypair;
@@ -108,28 +108,10 @@ impl Task for LoadOrCreateTask {
 pub fn neon_create(mut cx: FunctionContext) -> JsResult<JsUndefined> {
   // TODO support all arguments (path, curve, isLegacy, cb)
   let path = cx
-    .argument::<JsValue>(0)
-    .and_then(|v| {
-      if v.is_a::<JsString>() {
-        v.downcast::<JsString>().or_throw(&mut cx)
-      } else {
-        cx.throw_error("expected string as the first argument to `create`")
-      }
-    })
-    .or_else(|_| cx.throw_error("failed to understand the `path` argument"))?
+    .arg_as::<JsString>(0, "expected string as the first argument to `create`")?
     .value();
 
-  let cb = cx
-    .argument::<JsValue>(1)
-    .and_then(|f| {
-      if f.is_a::<JsFunction>() {
-        f.downcast::<JsFunction>().or_throw(&mut cx)
-      } else {
-        cx.throw_error("expected a callback function given to `create`")
-      }
-    })
-    .or_else(|_| cx.throw_error("failed to understand the `cb` argument"))?;
-
+  let cb = cx.arg_as::<JsFunction>(1, "expected a callback function given to `create`")?;
   let task = CreateTask { argument: path };
   task.schedule(cb);
   Ok(cx.undefined())
@@ -138,15 +120,7 @@ pub fn neon_create(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 pub fn neon_create_sync(mut cx: FunctionContext) -> JsResult<JsObject> {
   // TODO support all arguments (path, curve, isLegacy)
   let path = cx
-    .argument::<JsValue>(0)
-    .and_then(|v| {
-      if v.is_a::<JsString>() {
-        v.downcast::<JsString>().or_throw(&mut cx)
-      } else {
-        cx.throw_error("expected string as only argument to `loadSync`")
-      }
-    })
-    .or_else(|_| cx.throw_error("failed to understand the `path` argument"))?
+    .arg_as::<JsString>(0, "expected string as only argument to `loadSync`")?
     .value();
 
   let keypair = internal_create(&path).or_else(|e| cx.throw_error(e.to_string()))?;
@@ -156,27 +130,10 @@ pub fn neon_create_sync(mut cx: FunctionContext) -> JsResult<JsObject> {
 
 pub fn neon_load(mut cx: FunctionContext) -> JsResult<JsUndefined> {
   let path = cx
-    .argument::<JsValue>(0)
-    .and_then(|v| {
-      if v.is_a::<JsString>() {
-        v.downcast::<JsString>().or_throw(&mut cx)
-      } else {
-        cx.throw_error("expected string as the first argument to `load`")
-      }
-    })
-    .or_else(|_| cx.throw_error("failed to understand the `path` argument"))?
+    .arg_as::<JsString>(0, "expected string as the first argument to `load`")?
     .value();
 
-  let cb = cx
-    .argument::<JsValue>(1)
-    .and_then(|f| {
-      if f.is_a::<JsFunction>() {
-        f.downcast::<JsFunction>().or_throw(&mut cx)
-      } else {
-        cx.throw_error("expected a callback function given to `load`")
-      }
-    })
-    .or_else(|_| cx.throw_error("failed to understand the `cb` argument"))?;
+  let cb = cx.arg_as::<JsFunction>(1, "expected a callback function given to `load`")?;
 
   let task = LoadTask { argument: path };
   task.schedule(cb);
@@ -185,15 +142,7 @@ pub fn neon_load(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 
 pub fn neon_load_sync(mut cx: FunctionContext) -> JsResult<JsObject> {
   let path = cx
-    .argument::<JsValue>(0)
-    .and_then(|v| {
-      if v.is_a::<JsString>() {
-        v.downcast::<JsString>().or_throw(&mut cx)
-      } else {
-        cx.throw_error("expected string as only argument to `loadSync`")
-      }
-    })
-    .or_else(|_| cx.throw_error("failed to understand the `path` argument"))?
+    .arg_as::<JsString>(0, "expected string as only argument to `loadSync`")?
     .value();
 
   let keypair = internal_load(&path).or_else(|e| cx.throw_error(e.to_string()))?;
@@ -203,27 +152,11 @@ pub fn neon_load_sync(mut cx: FunctionContext) -> JsResult<JsObject> {
 
 pub fn neon_load_or_create(mut cx: FunctionContext) -> JsResult<JsUndefined> {
   let path = cx
-    .argument::<JsValue>(0)
-    .and_then(|v| {
-      if v.is_a::<JsString>() {
-        v.downcast::<JsString>().or_throw(&mut cx)
-      } else {
-        cx.throw_error("expected string as the first argument to `loadOrCreate`")
-      }
-    })
-    .or_else(|_| cx.throw_error("failed to understand the `path` argument"))?
+    .arg_as::<JsString>(0, "expected string as the first argument to `loadOrCreate`")?
     .value();
 
-  let cb = cx
-    .argument::<JsValue>(1)
-    .and_then(|f| {
-      if f.is_a::<JsFunction>() {
-        f.downcast::<JsFunction>().or_throw(&mut cx)
-      } else {
-        cx.throw_error("expected a callback function given to `loadOrCreate`")
-      }
-    })
-    .or_else(|_| cx.throw_error("failed to understand the `cb` argument"))?;
+  let cb =
+    cx.arg_as::<JsFunction>(1, "expected a callback function given to `loadOrCreate`")?;
 
   let task = LoadOrCreateTask { argument: path };
   task.schedule(cb);
@@ -232,15 +165,7 @@ pub fn neon_load_or_create(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 
 pub fn neon_load_or_create_sync(mut cx: FunctionContext) -> JsResult<JsObject> {
   let path = cx
-    .argument::<JsValue>(0)
-    .and_then(|v| {
-      if v.is_a::<JsString>() {
-        v.downcast::<JsString>().or_throw(&mut cx)
-      } else {
-        cx.throw_error("expected string as only argument to `loadOrCreateSync`")
-      }
-    })
-    .or_else(|_| cx.throw_error("failed to understand the `path` argument"))?
+    .arg_as::<JsString>(0, "expected string as only argument to `loadOrCreateSync`")?
     .value();
 
   let keypair = internal_load(&path)
