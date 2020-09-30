@@ -9,15 +9,13 @@ use std::io::prelude::*;
 use std::io::{Error, ErrorKind};
 use std::path::Path;
 
-fn internal_create(path: &str) -> Result<Keypair, Error> {
+fn internal_create<P: AsRef<Path>>(path: P) -> Result<Keypair, Error> {
   // TODO this path handling should be in ssb-keyfile
-  let path = Path::new(path).to_path_buf();
+  let mut path = path.as_ref().to_path_buf();
   let _ = fs::create_dir_all(&path);
-  let path = if path.is_dir() {
-    path.join("secret")
-  } else {
-    path
-  };
+  if path.is_dir() {
+    path.push("secret");
+  }
   if path.exists() {
     return Err(Error::new(
       ErrorKind::AlreadyExists,
@@ -37,17 +35,14 @@ fn internal_create(path: &str) -> Result<Keypair, Error> {
   Ok(keypair)
 }
 
-fn internal_load(path: &str) -> Result<Keypair, SSBError> {
+fn internal_load<P: AsRef<Path>>(path: P) -> Result<Keypair, SSBError> {
   // TODO this path handling should be in ssb-keyfile
-  let path = Path::new(path).to_path_buf();
   let _ = fs::create_dir_all(&path);
-  let path = if path.is_dir() {
-    path.join("secret")
+  if path.as_ref().is_dir() {
+    ssb_keyfile::load_keys_from_path(path.as_ref().join("secret"))
   } else {
-    path
-  };
-
-  ssb_keyfile::load_keys_from_path(&path)
+    ssb_keyfile::load_keys_from_path(path)
+  }
 }
 
 struct CreateTask {
