@@ -1,5 +1,5 @@
 use super::utils::{
-  self, arg_as_string_or_field, type_name, HandleExt, OptionExt, StringExt, ValueExt,
+  self, get_string_or_field, type_name, HandleExt, OptionExt, StringExt, ValueExt,
 };
 use arrayvec::ArrayVec;
 use neon::prelude::*;
@@ -16,7 +16,8 @@ pub fn neon_sign_obj(mut cx: FunctionContext) -> JsResult<JsObject> {
   }
 
   let keypair = {
-    let private_str = arg_as_string_or_field(&mut cx, 0, "private").or_throw(
+    let arg = cx.argument(0)?;
+    let private_str = get_string_or_field(&mut cx, arg, "private").or_throw(
       &mut cx,
       "expected 1st argument to be the keys object or the private key string",
     )?;
@@ -96,7 +97,8 @@ pub fn neon_verify_obj(mut cx: FunctionContext) -> JsResult<JsBoolean> {
   }
 
   let public_key = {
-    let public_str = arg_as_string_or_field(&mut cx, 0, "public").or_throw(
+    let arg = cx.argument(0)?;
+    let public_str = get_string_or_field(&mut cx, arg, "public").or_throw(
       &mut cx,
       "expected `public` argument to be the keys object or the public key string",
     )?;

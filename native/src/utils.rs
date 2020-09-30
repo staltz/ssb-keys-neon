@@ -88,15 +88,6 @@ pub fn bytes_to_buffer<'a>(cx: &mut impl Context<'a>, bytes: &[u8]) -> JsResult<
   Ok(buffer)
 }
 
-pub fn arg_as_string_or_field<'a, T: This>(
-  cx: &mut CallContext<'a, T>,
-  arg: i32,
-  field: &str,
-) -> Option<String> {
-  let v = cx.argument(arg).ok()?;
-  get_string_or_field(cx, v, field)
-}
-
 pub fn get_string_or_field<'a, T: This>(
   cx: &mut CallContext<'a, T>,
   v: Handle<JsValue>,

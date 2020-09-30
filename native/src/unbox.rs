@@ -1,4 +1,4 @@
-use super::utils::{self, arg_as_string_or_field, get_string_or_field, ContextExt, OptionExt};
+use super::utils::{self, get_string_or_field, ContextExt, OptionExt};
 use arrayvec::ArrayVec;
 use neon::prelude::*;
 use ssb_crypto::ephemeral::sk_to_curve;
@@ -43,7 +43,8 @@ pub fn neon_unbox(mut cx: FunctionContext) -> JsResult<JsValue> {
   let cyphertext = cyphertext.unwrap();
 
   let private_key = {
-    let private_str = arg_as_string_or_field(&mut cx, 1, "private").or_throw(
+    let v = cx.argument(1)?;
+    let private_str = get_string_or_field(&mut cx, v, "private").or_throw(
       &mut cx,
       "expected 2nd argument to be the keys object or the private key string",
     )?;
@@ -86,7 +87,8 @@ pub fn neon_unbox_key(mut cx: FunctionContext) -> JsResult<JsValue> {
   let cyphertext = cyphertext.unwrap();
 
   let keypair = {
-    let private_str = arg_as_string_or_field(&mut cx, 1, "private").or_throw(
+    let v = cx.argument(1)?;
+    let private_str = get_string_or_field(&mut cx, v, "private").or_throw(
       &mut cx,
       "expected 2nd argument to be the keys object or the private key string",
     )?;
@@ -145,7 +147,8 @@ pub fn neon_unbox_body(mut cx: FunctionContext) -> JsResult<JsValue> {
 // ssbSecretKeyToPrivateBoxSecret
 pub fn neon_sk_to_curve(mut cx: FunctionContext) -> JsResult<JsValue> {
   let keypair = {
-    let private_str = arg_as_string_or_field(&mut cx, 0, "private").or_throw(
+    let v = cx.argument(0)?;
+    let private_str = get_string_or_field(&mut cx, v, "private").or_throw(
       &mut cx,
       "expected 1st argument to be the keys object or the private key string",
     )?;
