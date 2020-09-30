@@ -192,3 +192,25 @@ impl<'a, T: Value> HandleExt for Handle<'a, T> {
     }
   }
 }
+
+pub trait ValueExt {
+  fn is_truthy<'a, C: Context<'a>>(&self, cx: &mut C) -> bool;
+}
+
+impl<T: Value + Managed> ValueExt for T {
+  fn is_truthy<'a, C: Context<'a>>(&self, cx: &mut C) -> bool {
+    let global = cx.global();
+    let boolean = global
+      .get(cx, "Boolean")
+      .unwrap()
+      .downcast::<JsFunction>()
+      .unwrap();
+    let args = ArrayVec::from([self.as_value(cx)]);
+    let b = boolean
+      .call(cx, global, args)
+      .unwrap()
+      .downcast::<JsBoolean>()
+      .unwrap();
+    b.value()
+  }
+}

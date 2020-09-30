@@ -1,4 +1,6 @@
-use super::utils::{self, arg_as_string_or_field, type_name, HandleExt, OptionExt, StringExt};
+use super::utils::{
+  self, arg_as_string_or_field, type_name, HandleExt, OptionExt, StringExt, ValueExt,
+};
 use arrayvec::ArrayVec;
 use neon::prelude::*;
 
@@ -28,8 +30,8 @@ pub fn neon_sign_obj(mut cx: FunctionContext) -> JsResult<JsObject> {
 
   // TODO this is exactly the same inside neon_verify_obj, maybe could refactor
   let hmac_key = {
-    if argc == 3 {
-      let array = cx.argument::<JsValue>(1).and_then(|v| {
+    if argc == 3 && cx.argument::<JsValue>(1)?.is_truthy(&mut cx) {
+      let authkey = cx.argument::<JsValue>(1).and_then(|v| {
         if let Some(buf) = v.try_downcast::<JsBuffer>() {
           let bytes = cx.borrow(&buf, |data| data.as_slice::<u8>());
           AuthKey::from_slice(bytes).or_throw(&mut cx, "hmac_key buffer must be 32 bytes")
@@ -40,7 +42,7 @@ pub fn neon_sign_obj(mut cx: FunctionContext) -> JsResult<JsObject> {
           cx.throw_error("expected 2nd argument to be a Buffer for the hmac_key")
         }
       })?;
-      Some(array)
+      Some(authkey)
     } else {
       None
     }
@@ -99,28 +101,32 @@ pub fn neon_verify_obj(mut cx: FunctionContext) -> JsResult<JsBoolean> {
   // TODO this is exactly the same inside neon_verify_obj, maybe could refactor
   let hmac_key = {
     if args_length == 3 {
-      let array = cx.argument::<JsValue>(1).and_then(|v| {
-        if v.is_a::<JsBuffer>() {
-          let buf = v.downcast::<JsBuffer>().or_throw(&mut cx)?;
-          let length = cx.borrow(&buf, |data| data.len());
-          if length != 32 {
-            return cx.throw_error("expected 2nd argument to be a 32-bytes Buffer");
+      if cx.argument::<JsValue>(1)?.is_truthy(&mut cx) {
+        let array = cx.argument::<JsValue>(1).and_then(|v| {
+          if v.is_a::<JsBuffer>() {
+            let buf = v.downcast::<JsBuffer>().or_throw(&mut cx)?;
+            let length = cx.borrow(&buf, |data| data.len());
+            if length != 32 {
+              return cx.throw_error("expected 2nd argument to be a 32-bytes Buffer");
+            }
+            let bytes = cx.borrow(&buf, |data| data.as_slice::<u8>());
+            AuthKey::from_slice(bytes).or_throw(&mut cx, "hmac_key buffer must be 32 bytes")
+          } else if v.is_a::<JsString>() {
+            v.downcast::<JsString>()
+              .or_throw(&mut cx)
+              .map(|s| s.value())
+              .and_then(|s| {
+                AuthKey::from_base64(&s)
+                  .or_throw(&mut cx, "expected 2nd argument to be a base64 string")
+              })
+          } else {
+            cx.throw_error("expected 2nd argument to be a Buffer for the hmac_key")
           }
-          let bytes = cx.borrow(&buf, |data| data.as_slice::<u8>());
-          AuthKey::from_slice(bytes).or_throw(&mut cx, "hmac_key buffer must be 32 bytes")
-        } else if v.is_a::<JsString>() {
-          v.downcast::<JsString>()
-            .or_throw(&mut cx)
-            .map(|s| s.value())
-            .and_then(|s| {
-              AuthKey::from_base64(&s)
-                .or_throw(&mut cx, "expected 2nd argument to be a base64 string")
-            })
-        } else {
-          cx.throw_error("expected 2nd argument to be a Buffer for the hmac_key")
-        }
-      })?;
-      Some(array)
+        })?;
+        Some(array)
+      } else {
+        None
+      }
     } else {
       None
     }
