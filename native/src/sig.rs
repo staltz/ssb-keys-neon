@@ -23,10 +23,7 @@ pub fn neon_sign_obj(mut cx: FunctionContext) -> JsResult<JsObject> {
     )?;
 
     // println!("private_str {}", private_str);
-    Keypair::from_base64(&private_str).ok_or_else(|| {
-      cx.throw_error::<_, Keypair>("cannot decode private key bytes")
-        .unwrap_err()
-    })?
+    Keypair::from_base64(&private_str).or_throw(&mut cx, "cannot decode private key bytes")?
   };
 
   // TODO this is exactly the same inside neon_verify_obj, maybe could refactor
