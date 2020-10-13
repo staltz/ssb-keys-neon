@@ -1,9 +1,3 @@
-// #[macro_use]
-extern crate base64;
-extern crate neon;
-extern crate private_box;
-extern crate ssb_crypto;
-extern crate ssb_keyfile;
 mod generate;
 mod hash;
 mod load_create;
