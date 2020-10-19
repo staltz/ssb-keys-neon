@@ -19,8 +19,6 @@ use self::sig::{neon_sign_obj, neon_verify_obj};
 use self::unbox::{neon_box, neon_sk_to_curve, neon_unbox, neon_unbox_body, neon_unbox_key};
 use neon::prelude::*;
 
-// FIXME: release new ssb-keyfile-rs with my PR
-
 register_module!(mut cx, {
   cx.export_function("generate", neon_generate)?;
   cx.export_function("load", neon_load)?;
