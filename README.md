@@ -80,7 +80,7 @@ Versions of ssb-keys that are mirrored by ssb-keys-neon currently include (and w
 <details>
 <summary>8.0.0 (click here to see which platforms are supported)</summary>
 
-As of `ssb-neon-keys@8.0.0-4`
+As of `ssb-keys-neon@8.0.0-5`
 
 - macOS (darwin-x64)
   - Node 10.x
