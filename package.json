@@ -1,5 +1,5 @@
 {
-  "name": "ssb-neon-keys",
+  "name": "ssb-keys-neon",
   "version": "8.0.0-4",
   "description": "Rust-in-Node.js variant of ssb-keys",
   "main": "lib/index.js",
@@ -7,7 +7,7 @@
   "license": "AGPL-3.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/staltz/ssb-neon-keys.git"
+    "url": "git+https://github.com/staltz/ssb-keys-neon.git"
   },
   "dependencies": {
     "neon-cli": "~0.5.0",

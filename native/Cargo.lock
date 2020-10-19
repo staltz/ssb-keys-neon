@@ -398,7 +398,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "ssb-neon-keys"
+name = "ssb-keys-neon"
 version = "8.0.0"
 dependencies = [
  "arrayvec 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",

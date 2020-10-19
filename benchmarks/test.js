@@ -1,8 +1,8 @@
 const os = require('os');
 const path = require('path');
 const crypto = require('crypto');
-const ssbJSKeys = require('ssb-keys');
-const ssbNeonKeys = require('../');
+const ssbKeys = require('ssb-keys');
+const ssbKeysNeon = require('../');
 
 function test(ssbKeys) {
   const filename = path.join(
@@ -34,15 +34,15 @@ function test(ssbKeys) {
   return after - before;
 }
 
-test(ssbNeonKeys); // warm up the CPU
-const js1 = test(ssbJSKeys);
-const ne1 = test(ssbNeonKeys);
-const js2 = test(ssbJSKeys);
-const ne2 = test(ssbNeonKeys);
-const js3 = test(ssbJSKeys);
-const ne3 = test(ssbNeonKeys);
-const ssbJSDuration = Math.round((js1 + js2 + js3) / 3);
-const ssbNeonDuration = Math.round((ne1 + ne2 + ne3) / 3);
-const speedup = ((100 * ssbNeonDuration) / ssbJSDuration).toFixed(1);
-console.log(`ssb-keys      ran in ${ssbJSDuration}ms`);
-console.log(`ssb-neon-keys ran in ${ssbNeonDuration}ms (${speedup}%)`);
+test(ssbKeysNeon); // warm up the CPU
+const js1 = test(ssbKeys);
+const ne1 = test(ssbKeysNeon);
+const js2 = test(ssbKeys);
+const ne2 = test(ssbKeysNeon);
+const js3 = test(ssbKeys);
+const ne3 = test(ssbKeysNeon);
+const ssbKeysDuration = Math.round((js1 + js2 + js3) / 3);
+const ssbKeysNeonDuration = Math.round((ne1 + ne2 + ne3) / 3);
+const speedup = ((100 * ssbKeysNeonDuration) / ssbKeysDuration).toFixed(1);
+console.log(`ssb-keys      ran in ${ssbKeysDuration}ms`);
+console.log(`ssb-neon-keys ran in ${ssbKeysNeonDuration}ms (${speedup}%)`);

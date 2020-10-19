@@ -1,5 +1,5 @@
 [package]
-name = "ssb-neon-keys"
+name = "ssb-keys-neon"
 version = "8.0.0"
 authors = ["Andre Staltz <andre@staltz.com>"]
 license = "AGPL-3.0"
