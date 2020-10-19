@@ -35,13 +35,5 @@
     "test-extra": "tape test-extra/*.js",
     "test": "npm run test-compat && npm run test-extra",
     "prepublishOnly": "if [ -z \"$CI\" ]; then echo \"can only npm publish from CI\" && exit 1; fi"
-  },
-  "binary": {
-    "module_name": "index",
-    "host": "https://github.com/staltz/ssb-neon-keys/releases/download/",
-    "remote_path": "{version}",
-    "package_name": "{node_abi}-{platform}-{arch}.tar.gz",
-    "module_path": "./native",
-    "pkg_path": "."
   }
 }
