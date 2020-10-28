@@ -1,6 +1,6 @@
 {
   "name": "ssb-keys-neon",
-  "version": "8.0.0-7",
+  "version": "8.0.0-8",
   "description": "Rust-in-Node.js variant of ssb-keys",
   "main": "lib/index.js",
   "author": "Andre Staltz <andre@staltz.com>",
