@@ -12,10 +12,10 @@ name = "ssb_neon_keys"
 crate-type = ["cdylib"]
 
 [build-dependencies]
-neon-build = "0.5.0"
+neon-build = "0.5.1"
 
 [dependencies]
-neon = "0.5.0"
+neon = "0.5.1"
 ssb-keyfile = "0.4.0"
 ssb-crypto = "0.2.1"
 private-box = "0.6.0"

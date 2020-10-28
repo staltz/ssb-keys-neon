@@ -163,37 +163,38 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "neon"
-version = "0.5.0"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "cslice 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "neon-build 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "neon-runtime 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "neon-build 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "neon-runtime 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "semver 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "smallvec 1.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "winapi 0.3.9 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "neon-build"
-version = "0.5.0"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "cfg-if 0.1.10 (registry+https://github.com/rust-lang/crates.io-index)",
- "neon-sys 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "neon-sys 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "neon-runtime"
-version = "0.5.0"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "cfg-if 0.1.10 (registry+https://github.com/rust-lang/crates.io-index)",
- "neon-sys 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "neon-sys 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "neon-sys"
-version = "0.5.0"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "cc 1.0.50 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -368,6 +369,11 @@ version = "1.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
+name = "smallvec"
+version = "1.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
 name = "ssb-crypto"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -403,8 +409,8 @@ version = "8.0.0"
 dependencies = [
  "arrayvec 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "base64 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "neon 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "neon-build 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "neon 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "neon-build 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "private-box 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "ssb-crypto 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "ssb-keyfile 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -602,10 +608,10 @@ dependencies = [
 "checksum lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
 "checksum libc 0.2.66 (registry+https://github.com/rust-lang/crates.io-index)" = "d515b1f41455adea1313a4a2ac8a8a477634fbae63cc6100e3aebb207ce61558"
 "checksum memchr 2.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "3197e20c7edb283f87c071ddfc7a2cca8f8e0b888c242959846a6fce03c72223"
-"checksum neon 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)" = "5f1314e1a7a6375ddfab87906f98e5a848649c5a88d7d118e9d603c12440964e"
-"checksum neon-build 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)" = "39a7bb825db76fd7b73956ea39329b92bc599adc8b71e1675908d9062c6dae69"
-"checksum neon-runtime 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)" = "d5e7dcc582b1c713f58f0b092b3f11de3ac94b2b8d78ea4b658b8990bfb3412c"
-"checksum neon-sys 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)" = "c41690bb07b1673ec8073f5c64dc041ab997d56a5d3cb2cbcc6dbfb7416c135e"
+"checksum neon 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)" = "075867e58280b31795f6673f0f87582a36dea2f080a51f31edd96abbdc2cfff0"
+"checksum neon-build 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)" = "6a47d5ac62595f747bf4c41b533b8af0cf7ed275745c0378e623169c07c3dc92"
+"checksum neon-runtime 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)" = "7717122f29d977a384ec0230d7cdd5aaf1ac4a499cca706432229d96c0a36957"
+"checksum neon-sys 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)" = "7c2b6927be1dc3b46556c6d27b99a26fe925bae594351010564d7ea4fe2c619d"
 "checksum opaque-debug 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "624a8340c38c1b80fd549087862da4ba43e08858af025b236e509b6649fc13d5"
 "checksum poly1305 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)" = "d9b42192ab143ed7619bf888a7f9c6733a9a2153b218e2cd557cfdb52fbf9bb1"
 "checksum ppv-lite86 0.2.9 (registry+https://github.com/rust-lang/crates.io-index)" = "c36fa947111f5c62a733b652544dd0016a43ce89619538a8ef92724a6f501a20"
@@ -627,6 +633,7 @@ dependencies = [
 "checksum serde_json 1.0.45 (registry+https://github.com/rust-lang/crates.io-index)" = "eab8f15f15d6c41a154c1b128a22f2dfabe350ef53c40953d84e36155c91192b"
 "checksum sha2 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)" = "2933378ddfeda7ea26f48c555bdad8bb446bf8a3d17832dc83e380d444cfb8c1"
 "checksum signature 1.2.2 (registry+https://github.com/rust-lang/crates.io-index)" = "29f060a7d147e33490ec10da418795238fd7545bba241504d6b31a409f2e6210"
+"checksum smallvec 1.4.2 (registry+https://github.com/rust-lang/crates.io-index)" = "fbee7696b84bbf3d89a1c2eccff0850e3047ed46bfcd2e92c29a2d074d57e252"
 "checksum ssb-crypto 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "9369544b73be8c55ae591657f12d72810a0e008170f71785d3d866983a451f88"
 "checksum ssb-keyfile 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "558c007f407f9331dfe04f94fb046ccf918aba4befbfed89fd487760fbac0029"
 "checksum stream-cipher 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)" = "09f8ed9974042b8c3672ff3030a69fcc03b74c47c3d1ecb7755e8a3626011e88"
