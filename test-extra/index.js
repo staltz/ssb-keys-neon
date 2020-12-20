@@ -11,12 +11,15 @@ let fs = require('fs');
 const keyPath = path.join(os.tmpdir(), `ssb-keys-${Date.now()}`);
 
 tape("don't create dir for fully-specified path", function (t) {
+  t.false(fs.existsSync(keyPath));
   ssbKeys.loadOrCreate(keyPath, (err, keys) => {
     t.error(err);
     t.true(fs.lstatSync(keyPath).isFile());
 
     ssbKeys.loadOrCreate(keyPath, (err, keys) => {
+      t.error(err);
       t.equal(keys.public.length, 52);
+      fs.unlinkSync(keyPath);
       t.end();
     });
   });

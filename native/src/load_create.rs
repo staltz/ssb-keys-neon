@@ -4,44 +4,22 @@ use neon::prelude::*;
 use ssb_crypto::Keypair;
 use ssb_keyfile::KeyFileError as SSBError;
 
-use std::fs::{self, File};
-use std::io::prelude::*;
-use std::io::{Error, ErrorKind};
+use std::io::Error;
 use std::path::Path;
 
 fn internal_create<P: AsRef<Path>>(path: P) -> Result<Keypair, Error> {
-  // TODO this path handling should be in ssb-keyfile
-  let mut path = path.as_ref().to_path_buf();
-  let _ = fs::create_dir_all(&path);
-  if path.is_dir() {
-    path.push("secret");
+  if path.as_ref().is_dir() {
+    ssb_keyfile::generate_at_path(path.as_ref().join("secret"))
+  } else {
+    ssb_keyfile::generate_at_path(&path)
   }
-  if path.exists() {
-    return Err(Error::new(
-      ErrorKind::AlreadyExists,
-      "refusing to overwrite",
-    ));
-  }
-
-  // TODO these three steps should be in ssb-keyfile
-  // Generate
-  let keypair = Keypair::generate();
-
-  // Render the file contents as a string
-  let file_contents = ssb_keyfile::new_keyfile_string(&keypair);
-
-  // Write the file
-  File::create(&path).and_then(|mut file| file.write_all(file_contents.as_bytes()))?;
-  Ok(keypair)
 }
 
 fn internal_load<P: AsRef<Path>>(path: P) -> Result<Keypair, SSBError> {
-  // TODO this path handling should be in ssb-keyfile
-  let _ = fs::create_dir_all(&path);
   if path.as_ref().is_dir() {
-    ssb_keyfile::load_keys_from_path(path.as_ref().join("secret"))
+    ssb_keyfile::read_from_path(path.as_ref().join("secret"))
   } else {
-    ssb_keyfile::load_keys_from_path(path)
+    ssb_keyfile::read_from_path(path)
   }
 }
 
@@ -155,8 +133,7 @@ pub fn neon_load_or_create(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     .arg_as::<JsString>(0, "expected string as the first argument to `loadOrCreate`")?
     .value();
 
-  let cb =
-    cx.arg_as::<JsFunction>(1, "expected a callback function given to `loadOrCreate`")?;
+  let cb = cx.arg_as::<JsFunction>(1, "expected a callback function given to `loadOrCreate`")?;
 
   let task = LoadOrCreateTask { argument: path };
   task.schedule(cb);
