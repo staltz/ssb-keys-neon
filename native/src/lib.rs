@@ -15,7 +15,7 @@ use self::load_create::{
 };
 use self::misc::neon_get_tag;
 use self::secret::{neon_secret_box, neon_secret_unbox};
-use self::sig::{neon_sign_obj, neon_verify_obj};
+use self::sig::{neon_sign, neon_sign_obj, neon_verify, neon_verify_obj};
 use self::unbox::{neon_box, neon_sk_to_curve, neon_unbox, neon_unbox_body, neon_unbox_key};
 use neon::prelude::*;
 
@@ -29,6 +29,8 @@ register_module!(mut cx, {
   cx.export_function("loadOrCreateSync", neon_load_or_create_sync)?;
   cx.export_function("signObj", neon_sign_obj)?;
   cx.export_function("verifyObj", neon_verify_obj)?;
+  cx.export_function("sign", neon_sign)?;
+  cx.export_function("verify", neon_verify)?;
   cx.export_function("getTag", neon_get_tag)?;
   cx.export_function("hash", neon_hash)?;
   cx.export_function("box", neon_box)?;

@@ -1,11 +1,73 @@
 use super::utils::{
-  self, get_string_or_field, type_name, HandleExt, OptionExt, StringExt, ValueExt,
+  self, get_string_or_field, type_name, ContextExt, HandleExt, OptionExt, StringExt, ValueExt,
 };
 use arrayvec::ArrayVec;
 use neon::prelude::*;
 
 // TODO NetworkKey isn't a great name, I guess
 use ssb_crypto::{Keypair, NetworkKey as AuthKey, PublicKey, Signature};
+
+// sign: (keys: obj | string, str: string) => string
+pub fn neon_sign(mut cx: FunctionContext) -> JsResult<JsString> {
+  // FIXME: detect `curve` from keys.curve or from u.getTag and validate it
+  let argc = cx.len();
+  if argc < 2 {
+    return cx.throw_error("sign requires at least two arguments: (keys, msg)");
+  }
+
+  let keypair = {
+    let arg = cx.argument(0)?;
+    let private_str = get_string_or_field(&mut cx, arg, "private").or_throw(
+      &mut cx,
+      "expected 1st argument to be the keys object or the private key string",
+    )?;
+
+    Keypair::from_base64(&private_str).or_throw(&mut cx, "cannot decode private key bytes")?
+  };
+
+  let msg = cx
+    .arg_as::<JsString>(1, "expected 2nd arg to be a plaintext string")?
+    .value()
+    .into_bytes();
+
+  let sig = keypair.sign(msg.as_slice());
+  let signature = cx.string(sig.as_base64().with_suffix(".sig.ed25519"));
+
+  Ok(signature)
+}
+
+// verify: (keys: obj | string, signature: string, str: string) => boolean
+pub fn neon_verify(mut cx: FunctionContext) -> JsResult<JsBoolean> {
+  // FIXME: detect `curve` from keys.curve or from u.getTag and validate it
+  let argc = cx.len();
+  if argc < 2 {
+    return cx.throw_error("verifyObj requires at least two arguments: (keys, msg)");
+  }
+
+  let public_key = {
+    let arg = cx.argument(0)?;
+    let public_str = get_string_or_field(&mut cx, arg, "public").or_throw(
+      &mut cx,
+      "expected `public` argument to be the keys object or the public key string",
+    )?;
+    PublicKey::from_base64(&public_str).or_throw(&mut cx, "cannot base64 decode the public key")?
+  };
+
+  let signature = {
+    let sig = cx
+      .arg_as::<JsString>(1, "expected 2nd arg to be a signature string")?
+      .value();
+    Signature::from_base64(&sig).or_throw(&mut cx, "unable to decode signature base64 string")?
+  };
+
+  let msg = cx
+    .arg_as::<JsString>(2, "expected 3rd arg to be a plaintext string")?
+    .value();
+
+  let passed = public_key.verify(&signature, msg.into_bytes().as_slice());
+
+  Ok(cx.boolean(passed))
+}
 
 // sign: (keys: obj | string, hmac_key?: string, o: obj) => string
 pub fn neon_sign_obj(mut cx: FunctionContext) -> JsResult<JsObject> {
@@ -22,7 +84,6 @@ pub fn neon_sign_obj(mut cx: FunctionContext) -> JsResult<JsObject> {
       "expected 1st argument to be the keys object or the private key string",
     )?;
 
-    // println!("private_str {}", private_str);
     Keypair::from_base64(&private_str).or_throw(&mut cx, "cannot decode private key bytes")?
   };
 
