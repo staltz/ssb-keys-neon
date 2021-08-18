@@ -54,9 +54,13 @@ pub fn neon_verify(mut cx: FunctionContext) -> JsResult<JsBoolean> {
   };
 
   let signature = {
-    let sig = cx
+    let mut sig = cx
       .arg_as::<JsString>(1, "expected 2nd arg to be a signature string")?
       .value();
+    match sig.rfind(".sig.ed25519") {
+      None => return cx.throw_error("Invalid signature string, is missing dot suffix"),
+      Some(dot_index) => sig.truncate(dot_index)
+    };
     Signature::from_base64(&sig).or_throw(&mut cx, "unable to decode signature base64 string")?
   };
 
@@ -198,13 +202,17 @@ pub fn neon_verify_obj(mut cx: FunctionContext) -> JsResult<JsBoolean> {
   };
 
   let signature = {
-    let sig = verify_obj
+    let mut sig = verify_obj
       .get(&mut cx, "signature")
       .or_else(|_| cx.throw_error("obj.signature field is missing from obj"))?
       .downcast::<JsString>()
       .or_throw(&mut cx)
       .or_else(|_| cx.throw_error("obj.signature field is corrupted or not a string"))?
       .value();
+    match sig.rfind(".sig.ed25519") {
+      None => return cx.throw_error("Invalid signature string, is missing dot suffix"),
+      Some(dot_index) => sig.truncate(dot_index)
+    };
     Signature::from_base64(&sig).or_throw(&mut cx, "unable to decode signature base64 string")?
   };
 
