@@ -433,9 +433,9 @@ checksum = "fbee7696b84bbf3d89a1c2eccff0850e3047ed46bfcd2e92c29a2d074d57e252"
 
 [[package]]
 name = "ssb-crypto"
-version = "0.2.2"
+version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b53ec8f655fb4128b3cdb9b5c981ef46944d8d95c14c958c4749aa78d2a8918d"
+checksum = "a055e461165ec87134bb33a521e7bb4e49f306ed14db31cab221dc649b2762a2"
 dependencies = [
  "base64",
  "curve25519-dalek",
@@ -452,9 +452,9 @@ dependencies = [
 
 [[package]]
 name = "ssb-keyfile"
-version = "0.5.3"
+version = "0.5.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e8a79bd5d4558dc41bab32420d0a8e9e889cb2e1254d81a7ca5bb64422e95980"
+checksum = "8dc0b4660dcbc0f17195e012306eb1cb80e6d4037458e93529a81a4a1240504d"
 dependencies = [
  "base64",
  "serde",

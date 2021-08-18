@@ -2,7 +2,7 @@
 name = "ssb-keys-neon"
 version = "8.0.0"
 authors = ["Andre Staltz <andre@staltz.com>"]
-license = "AGPL-3.0"
+license = "LGPL-3.0"
 build = "build.rs"
 exclude = ["artifacts.json", "index.node"]
 edition = "2018"
@@ -16,8 +16,8 @@ neon-build = "0.5.1"
 
 [dependencies]
 neon = "0.5.1"
-ssb-keyfile = "0.5.0"
-ssb-crypto = "0.2.2"
+ssb-keyfile = "0.5.4"
+ssb-crypto = "0.2.3"
 private-box = "0.6.0"
 base64 = "0.13.0"
 arrayvec = "0.5.1"

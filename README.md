@@ -207,4 +207,4 @@ As of `ssb-keys-neon@8.0.0-5`
 
 ## License
 
-AGPL-3.0
+LGPL-3.0
