@@ -7,7 +7,7 @@ use neon::prelude::*;
 // TODO NetworkKey isn't a great name, I guess
 use ssb_crypto::{Keypair, NetworkKey as AuthKey, PublicKey, Signature};
 
-// sign: (keys: obj | string, str: string) => string
+// sign: (keys: obj | string, hmac_key: Buffer | string, str: string) => string
 pub fn neon_sign(mut cx: FunctionContext) -> JsResult<JsString> {
   // FIXME: detect `curve` from keys.curve or from u.getTag and validate it
   let argc = cx.len();
@@ -25,23 +25,50 @@ pub fn neon_sign(mut cx: FunctionContext) -> JsResult<JsString> {
     Keypair::from_base64(&private_str).or_throw(&mut cx, "cannot decode private key bytes")?
   };
 
+  // TODO this is exactly the same inside neon_verify_obj, maybe could refactor
+  let hmac_key = {
+    if argc == 3 && cx.argument::<JsValue>(1)?.is_truthy(&mut cx) {
+      let authkey = cx.argument::<JsValue>(1).and_then(|v| {
+        if let Some(buf) = v.try_downcast::<JsBuffer>() {
+          let bytes = cx.borrow(&buf, |data| data.as_slice::<u8>());
+          AuthKey::from_slice(bytes).or_throw(&mut cx, "hmac_key buffer must be 32 bytes")
+        } else if let Some(s) = v.try_downcast::<JsString>() {
+          AuthKey::from_base64(&s.value())
+            .or_throw(&mut cx, "expected 2nd argument to be a base64 string")
+        } else {
+          cx.throw_error("expected 2nd argument to be a Buffer for the hmac_key")
+        }
+      })?;
+      Some(authkey)
+    } else {
+      None
+    }
+  };
+
   let msg = cx
-    .arg_as::<JsString>(1, "expected 2nd arg to be a plaintext string")?
+    .arg_as::<JsString>(argc - 1, "expected 2nd arg to be a plaintext string")?
     .value()
     .into_bytes();
 
-  let sig = keypair.sign(msg.as_slice());
+  let sig = match hmac_key {
+    None => keypair.sign(msg.as_slice()),
+    Some(hmac_key) => {
+      let tag = hmac_key.authenticate(msg.as_slice());
+      keypair.sign(&tag.0)
+    }
+  };
+
   let signature = cx.string(sig.as_base64().with_suffix(".sig.ed25519"));
 
   Ok(signature)
 }
 
-// verify: (keys: obj | string, signature: string, str: string) => boolean
+// verify: (keys: obj | string, signature: string, hmac_key, str: string) => boolean
 pub fn neon_verify(mut cx: FunctionContext) -> JsResult<JsBoolean> {
   // FIXME: detect `curve` from keys.curve or from u.getTag and validate it
   let argc = cx.len();
-  if argc < 2 {
-    return cx.throw_error("verifyObj requires at least two arguments: (keys, msg)");
+  if argc < 3 {
+    return cx.throw_error("verify requires at least two arguments: (keys, msg)");
   }
 
   let public_key = {
@@ -64,11 +91,37 @@ pub fn neon_verify(mut cx: FunctionContext) -> JsResult<JsBoolean> {
     Signature::from_base64(&sig).or_throw(&mut cx, "unable to decode signature base64 string")?
   };
 
+  // TODO this is almost the same inside neon_verify_obj, maybe could refactor
+  let hmac_key = {
+    if argc == 4 && cx.argument::<JsValue>(2)?.is_truthy(&mut cx) {
+      let authkey = cx.argument::<JsValue>(2).and_then(|v| {
+        if let Some(buf) = v.try_downcast::<JsBuffer>() {
+          let bytes = cx.borrow(&buf, |data| data.as_slice::<u8>());
+          AuthKey::from_slice(bytes).or_throw(&mut cx, "hmac_key buffer must be 32 bytes")
+        } else if let Some(s) = v.try_downcast::<JsString>() {
+          AuthKey::from_base64(&s.value())
+            .or_throw(&mut cx, "expected 3rd argument to be a base64 string")
+        } else {
+          cx.throw_error("expected 3rd argument to be a Buffer for the hmac_key")
+        }
+      })?;
+      Some(authkey)
+    } else {
+      None
+    }
+  };
+
   let msg = cx
-    .arg_as::<JsString>(2, "expected 3rd arg to be a plaintext string")?
+    .arg_as::<JsString>(argc - 1 , "expected last arg to be a plaintext string")?
     .value();
 
-  let passed = public_key.verify(&signature, msg.into_bytes().as_slice());
+  let passed = match hmac_key {
+    None => public_key.verify(&signature, msg.into_bytes().as_slice()),
+    Some(hmac_key) => {
+      let tag = hmac_key.authenticate(msg.into_bytes().as_slice());
+      public_key.verify(&signature, &tag.0)
+    }
+  };
 
   Ok(cx.boolean(passed))
 }
