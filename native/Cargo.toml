@@ -15,7 +15,7 @@ crate-type = ["cdylib"]
 neon-build = "0.5.1"
 
 [dependencies]
-neon = "0.5.1"
+neon = "0.10.1"
 ssb-keyfile = "0.5.4"
 ssb-crypto = "0.2.3"
 private-box = "0.6.0"
